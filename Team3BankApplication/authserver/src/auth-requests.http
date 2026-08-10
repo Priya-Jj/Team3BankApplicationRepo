@@ -1,0 +1,41 @@
+### Client Credentials token. Service identity, no user involved.
+### The Authorization header is Base64("bank-service:bank-service-secret").
+POST http://127.0.0.1:9000/oauth2/token
+Authorization: Basic YmFuay1zZXJ2aWNlOmJhbmstc2VydmljZS1zZWNyZXQ=
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&scope=account.read transaction.read
+
+###
+
+### Authorization Code flow, Step 1.
+### Open the URL below manually in your browser (do not run it as an HTTP request).
+### Log in as alice / password (or bob, carla, edward, audit) and approve the
+### scopes on the consent screen.
+### The browser redirects to http://127.0.0.1:9000/authorized?code=XXXX
+### Copy the "code" query parameter value from the URL bar before it expires.
+###
+### IMPORTANT: the authorize URL host (127.0.0.1) MUST match the redirect_uri
+### host (127.0.0.1). The browser treats "localhost" and "127.0.0.1" as
+### different origins -- if the authorize URL uses one and the redirect_uri
+### uses the other, the session cookie is lost on the redirect and you will
+### be asked to log in a second time.
+###
+### URL to open in browser (request the full set of bank scopes; the customizer
+### will narrow them to what the logged-in user is entitled to):
+###
+### http://127.0.0.1:9000/oauth2/authorize?response_type=code&client_id=bank-spa&redirect_uri=http://127.0.0.1:9000/authorized&scope=openid%20profile%20account.read%20account.write%20account.create%20transaction.read%20transaction.create%20customer.read%20customer.write&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256&state=abc123
+
+###
+
+### Authorization Code flow, Step 2.
+### Replace CODE_FROM_BROWSER with the value from the browser URL bar.
+### The code_verifier matches the code_challenge in the URL above.
+POST http://127.0.0.1:9000/oauth2/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code
+    &code=x58R4XgqEmNjQiIE0Swqnu48iX6RSXNWbCx5Xb1yj1KZ6AUkaiyDmvoDhUvgGg0BVcarkIVqIR0RL0pOVkRVF9G64fZWcq0_qWJz8PJd8foo2o-fMcPGUmbD1KxCp09G&state=abc123
+    &redirect_uri=http://127.0.0.1:9000/authorized
+    &client_id=bank-spa
+    &code_verifier=dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk

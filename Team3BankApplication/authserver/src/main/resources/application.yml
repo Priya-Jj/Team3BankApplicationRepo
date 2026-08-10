@@ -1,0 +1,46 @@
+server:
+  port: 9000
+
+spring:
+  security:
+    oauth2:
+      authorizationserver:
+        # Pin the issuer URI explicitly. Without this setting, Spring infers
+        # the issuer from the host of the first incoming request -- which
+        # means it could become "http://localhost:9000" or "http://127.0.0.1:9000"
+        # depending on which one happened to hit the server first. Resource
+        # servers and OAuth clients in later labs match the iss claim
+        # against a configured issuer-uri string exactly, so the issuer
+        # must be deterministic.
+        #
+        # 127.0.0.1 (not localhost) is chosen because Lab 2-1's redirect URI
+        # for bank-spa is http://127.0.0.1:9000/authorized. The authorize
+        # URL and the redirect URI must use the same host or the browser
+        # loses the session cookie on the redirect.
+        issuer: http://localhost:9000
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    root: INFO
+    # general Spring Security
+
+    # OAuth / Authorization Server (Spring Authorization Server)
+    org.springframework.security.oauth2: DEBUG
+    org.springframework.security.oauth2.server.authorization: DEBUG
+    org.springframework.security.oauth2.client: DEBUG
+    org.springframework.security.oauth2.server.resource: DEBUG
+    org.springframework.security.oauth2.core: DEBUG
+    # web requests (controllers, filters)
+    org.springframework.web: DEBUG
+    # Nimbus JOSE / JWT library
+    com.nimbusds.jose: DEBUG
+    com.nimbusds.jwt: DEBUG
+    # your application package (to follow your own debug logs)
+    com.example.authserver: DEBUG
+    # if you use JPA/hibernate and want SQL debugging:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+
+

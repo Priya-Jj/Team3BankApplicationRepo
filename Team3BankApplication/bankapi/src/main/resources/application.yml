@@ -1,0 +1,29 @@
+server:
+  port: 8081
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Spring Security fetches the public keys from this endpoint on startup
+          # and caches them. The key whose "kid" matches the incoming token's
+          # "kid" header claim is used to verify the signature.
+          jwks-uri: http://127.0.0.1:9000/oauth2/jwks
+
+          # The expected value of the "iss" claim in every incoming token.
+          # Tokens where "iss" does not equal this value are rejected with 401.
+          issuer-uri: http://127.0.0.1:9000
+      client:
+        registration:
+          downstream-api:
+            client-id: bank-service
+            # Matches the {noop}bank-service-secret configured in the
+            # Authorization Server. In production this comes from an
+            # environment variable or secrets manager.
+            client-secret: bank-service-secret
+            authorization-grant-type: client_credentials
+            scope: account.read
+        provider:
+          downstream-api:
+            token-uri: http://127.0.0.1:9000/oauth2/token
