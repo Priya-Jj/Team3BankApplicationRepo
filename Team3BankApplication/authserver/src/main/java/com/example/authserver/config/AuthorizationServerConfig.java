@@ -282,6 +282,7 @@ public class AuthorizationServerConfig {
                 .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
                 .scope("account.read")
                 .scope("transaction.read")
+                .scope("transaction.create")
                 .tokenSettings(TokenSettings.builder()
                         // Service tokens can have longer lifetimes because the
                         // service can re-authenticate silently at any time.

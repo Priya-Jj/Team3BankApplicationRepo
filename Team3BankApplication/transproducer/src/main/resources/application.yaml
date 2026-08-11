@@ -1,0 +1,19 @@
+spring:
+  main:
+    web-application-type: none
+  application:
+    name: transproducer
+
+  kafka:
+    bootstrap-servers: localhost:9092,localhost:9094,localhost:9096
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      properties:
+        enable.idempotence: true
+        linger.ms: 10
+
+logging:
+  level:
+    com.example.transproducer: INFO
