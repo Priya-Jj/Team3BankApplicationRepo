@@ -4,11 +4,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
@@ -29,7 +27,12 @@ import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public CustomLogoutSuccessHandler customLogoutSuccessHandler(ClientRegistrationRepository clientRegistrationRepository) {
+        return new CustomLogoutSuccessHandler(clientRegistrationRepository);
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, ClientRegistrationRepository clientRegistrationRepository, OAuth2AuthorizationRequestCustomizer authorizationRequestCustomizer, CustomLogoutSuccessHandler customLogoutSuccessHandler) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/oauth2/**", "/login/**").permitAll()
@@ -52,13 +55,16 @@ public class SecurityConfig {
                                     AnyRequestMatcher.INSTANCE);
                 })
 
-                .oauth2Login(Customizer.withDefaults())
+                .oauth2Login(login -> login
+                        .authorizationEndpoint(endpoint -> endpoint
+                                .authorizationRequestResolver(authorizationRequestCustomizer)))
 
                 .logout(logout -> logout
                         .logoutUrl("/logout")
-                        .logoutSuccessUrl("/")
+                        .logoutSuccessHandler(customLogoutSuccessHandler)
                         .invalidateHttpSession(true)
-                        .clearAuthentication(true))
+                        .clearAuthentication(true)
+                        .deleteCookies("BFF_SESSION"))
 
                 .csrf(AbstractHttpConfigurer::disable);
 

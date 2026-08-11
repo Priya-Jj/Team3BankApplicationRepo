@@ -39,7 +39,9 @@ main {
 /* Section shared styling */
 
 .account-list,
-.transfer-form {
+.transfer-form,
+.teller-screen,
+.all-accounts {
   background-color: white;
   padding: 1.5rem;
   border-radius: 8px;
@@ -47,7 +49,9 @@ main {
 }
 
 .account-list h2,
-.transfer-form h2 {
+.transfer-form h2,
+.teller-screen h2,
+.all-accounts h2 {
   margin: 0 0 1rem 0;
   font-size: 1.25rem;
   font-weight: 600;
@@ -56,19 +60,23 @@ main {
 
 /* Account list table */
 
-.account-list table {
+.account-list table,
+.all-accounts table {
   width: 100%;
   border-collapse: collapse;
 }
 
 .account-list th,
-.account-list td {
+.account-list td,
+.all-accounts th,
+.all-accounts td {
   text-align: left;
   padding: 0.75rem 1rem;
   border-bottom: 1px solid #e2e8f0;
 }
 
-.account-list th {
+.account-list th,
+.all-accounts th {
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -76,17 +84,20 @@ main {
   background-color: #f7fafc;
 }
 
-.account-list td:last-child {
+.account-list td:last-child,
+.all-accounts td:last-child {
   text-align: right;
   font-variant-numeric: tabular-nums;
   font-weight: 500;
 }
 
-.account-list tr:last-child td {
+.account-list tr:last-child td,
+.all-accounts tr:last-child td {
   border-bottom: none;
 }
 
-.account-list tr:hover td {
+.account-list tr:hover td,
+.all-accounts tr:hover td {
   background-color: #f7fafc;
 }
 
@@ -140,6 +151,114 @@ main {
   background-color: #a0aec0;
 }
 
+/* Teller Screen */
+
+.teller-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.teller-info {
+  background-color: #edf2f7;
+  padding: 1.5rem;
+  border-left: 4px solid #1f6feb;
+}
+
+.teller-info h2 {
+  margin: 0 0 0.5rem 0;
+  color: #1f6feb;
+}
+
+.teller-info p {
+  margin: 0;
+  color: #4a5568;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.section-header h2 {
+  margin: 0;
+}
+
+.create-account-button {
+  padding: 0.625rem 1.5rem;
+  background-color: #22c55e;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  font-size: 0.9375rem;
+  transition: background-color 0.15s ease;
+}
+
+.create-account-button:hover {
+  background-color: #16a34a;
+}
+
+.create-account-form {
+  background-color: #f7fafc;
+  padding: 1.5rem;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+  border: 1px solid #cbd5e0;
+}
+
+.create-account-form h3 {
+  margin: 0 0 1rem 0;
+  color: #2d3748;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4a5568;
+}
+
+.form-group input,
+.form-group select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #cbd5e0;
+  border-radius: 4px;
+  background-color: white;
+  font-size: 0.9375rem;
+  transition: border-color 0.15s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #1f6feb;
+  box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.15);
+}
+
+.submit-button {
+  padding: 0.625rem 1.5rem;
+  background-color: #1f6feb;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  font-size: 1rem;
+  transition: background-color 0.15s ease;
+}
+
+.submit-button:hover {
+  background-color: #1858c4;
+}
+
 /* Status messages */
 
 .status-message {
@@ -150,6 +269,13 @@ main {
 }
 
 .status-message.error {
+  color: #c53030;
+  background-color: #fed7d7;
+  border-radius: 4px;
+  padding: 1rem;
+}
+
+.error-message {
   color: #c53030;
   background-color: #fed7d7;
   border-radius: 4px;
@@ -189,8 +315,21 @@ main {
   gap: 1rem;
 }
 
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: right;
+}
+
 .user-name {
   font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+.user-role {
+  font-size: 0.75rem;
+  opacity: 0.8;
 }
 
 .sign-out-button {
@@ -242,4 +381,38 @@ main {
 
 .sign-in-button:hover {
   background-color: #1858c4;
+}
+
+.account-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.account-status-active {
+  background-color: #dcfce7;
+  color: #166534;
+  border-color: #86efac;
+}
+
+.account-status-inactive {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border-color: #fca5a5;
+}
+
+.transfer-form .form-hint {
+  margin: 0 0 1rem 0;
+  color: #4a5568;
+  font-size: 0.9rem;
 }

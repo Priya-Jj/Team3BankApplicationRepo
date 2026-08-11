@@ -47,6 +47,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 
 @Configuration
 @EnableWebSecurity
@@ -78,12 +81,6 @@ public class AuthorizationServerConfig {
             "transaction.create",
             "customer.read",
             "customer.write"
-    );
-
-    private static final Set<String> AUDITOR_SCOPES = Set.of(
-            "account.read",
-            "transaction.read",
-            "customer.read"
     );
 
     // Union of every scope any user can hold. The bank-spa client is
@@ -149,7 +146,13 @@ public class AuthorizationServerConfig {
             throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
-                .formLogin(Customizer.withDefaults());
+                .formLogin(Customizer.withDefaults())
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login?logout")
+                        .invalidateHttpSession(true)
+                        .clearAuthentication(true)
+                        .deleteCookies("JSESSIONID"));
         return http.build();
     }
 
@@ -167,13 +170,29 @@ public class AuthorizationServerConfig {
     }
 
     // -------------------------------------------------------------------------
+    // Authentication Manager
+    //
+    // Explicitly configure the AuthenticationManager with the UserDetailsService
+    // and PasswordEncoder to ensure form login works correctly.
+    // -------------------------------------------------------------------------
+    @Bean
+    public AuthenticationManager authenticationManager(UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder);
+        return new org.springframework.security.authentication.ProviderManager(authProvider);
+    }
+
+    // -------------------------------------------------------------------------
     // Users
     //
-    // Five users covering the three roles in the banking scenario.
+    // Two roles and authentication types:
+    //   - Customers: authenticate with customer_number (e.g., 487-978493)
+    //   - Staff: authenticate with staff username (e.g., teller1)
     // All share the password "password" for lab convenience only.
     //
     // The role string drives two things:
-    //   1. The Spring Security authority (ROLE_ACCOUNT_HOLDER, ROLE_TELLER, ...)
+    //   1. The Spring Security authority (ROLE_ACCOUNT_HOLDER, ROLE_TELLER)
     //      used by hasRole(...) in @PreAuthorize on the Resource Server.
     //   2. A "roles" claim added to the JWT by the token customizer.
     //
@@ -188,7 +207,7 @@ public class AuthorizationServerConfig {
     // org.springframework.security.core.userdetails.User on lookup -- your
     // BankUser subtype is stripped. The token customizer's
     // `instanceof BankUser` check would then always be false, and the JWT
-    // would come out with sub="carla" (the login name), no roles, no name,
+    // would come out with sub=username, no roles, no name,
     // no preferred_username, and an unfiltered scope claim. The tiny lambda
     // UserDetailsService below hands the BankUser back unchanged.
     // -------------------------------------------------------------------------
@@ -197,16 +216,18 @@ public class AuthorizationServerConfig {
         String pwd = encoder.encode("password");   // LAB ONLY -- same password for all users
 
         Map<String, BankUser> users = Map.of(
-                "alice",  new BankUser("1",  "alice",  pwd, "Alice Nguyen",
+                // Customers authenticate with customer_number (e.g., 487-978493)
+                "487-978493",  new BankUser("487-978493",  "487-978493",  pwd, "Alice Nguyen",
                         "account_holder", ACCOUNT_HOLDER_SCOPES),
-                "bob",    new BankUser("C002",  "bob",    pwd, "Bob Patel",
+                "487-978494",  new BankUser("487-978494",  "487-978494",  pwd, "Bob Patel",
                         "account_holder", ACCOUNT_HOLDER_SCOPES),
-                "carla",  new BankUser("C003",  "carla",  pwd, "Carla Romero",
+                "487-978495",  new BankUser("487-978495",  "487-978495",  pwd, "Carla Romero",
                         "account_holder", ACCOUNT_HOLDER_SCOPES),
-                "edward", new BankUser("EM01",  "edward", pwd, "Edward Teller",
+                // Staff authenticate with staff username (e.g., teller1)
+                "teller1", new BankUser("teller1", "teller1", pwd, "Edward Teller",
                         "teller",         TELLER_SCOPES),
-                "audit",  new BankUser("AUD01", "audit",  pwd, "Sunrise Accounting",
-                        "auditor",        AUDITOR_SCOPES)
+                "teller2", new BankUser("teller2", "teller2", pwd, "Teller Two",
+                        "teller",         TELLER_SCOPES)
         );
 
         return username -> {
@@ -282,6 +303,7 @@ public class AuthorizationServerConfig {
                 .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
                 .scope("account.read")
                 .scope("transaction.read")
+                .scope("transaction.create")
                 .tokenSettings(TokenSettings.builder()
                         // Service tokens can have longer lifetimes because the
                         // service can re-authenticate silently at any time.
@@ -305,14 +327,14 @@ public class AuthorizationServerConfig {
                 .redirectUri("http://localhost:8080/login/oauth2/code/bank-auth")
                 // Through Vite proxy (Lab 4.7 React integration)  <-- NEW
                 .redirectUri("http://localhost:5173/login/oauth2/code/bank-auth")
+                .postLogoutRedirectUri("http://localhost:8080/")
+                .postLogoutRedirectUri("http://localhost:5173/")
                 .scope(OidcScopes.OPENID)
                 .scope(OidcScopes.PROFILE)
-                // The full set of bank scopes. The token customizer in Lab 2-1
-                // narrows these per user at issue time: alice (account_holder) gets
-                // the account_holder subset; edward (teller) gets the teller subset;
-                // audit (auditor) gets the auditor subset. Registering with the
-                // superset lets any user log in via the BFF and receive a token
-                // appropriate to their role.
+                // The full set of bank scopes. The token customizer narrows
+                // these per user at issue time: customers get the account_holder subset;
+                // staff members get the teller subset. Registering with the superset
+                // lets any user log in via the BFF and receive a token appropriate to their role.
                 .scope("account.read")
                 .scope("account.write")
                 .scope("account.create")

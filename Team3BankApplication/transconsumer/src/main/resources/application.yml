@@ -1,0 +1,24 @@
+spring:
+  main:
+    web-application-type: none
+  application:
+    name: transconsumer
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: transconsumergroup
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.use.type.headers: false
+        spring.json.value.default.type: com.example.transconsumer.model.TransactionStatistic
+        spring.json.trusted.packages: "com.example.transconsumer.model"
+
+logging:
+  level:
+    com.example.transconsumer: INFO
+
+app:
+  collector: console

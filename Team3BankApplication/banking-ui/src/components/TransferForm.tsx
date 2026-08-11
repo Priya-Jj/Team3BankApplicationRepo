@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { postTransfer } from '../api/client';
 import type { Account } from '../api/types';
 import { formatCurrency } from '../utils/format';
@@ -8,6 +8,10 @@ type TransferFormProps = {
   onTransferComplete: () => void;
 };
 
+function isActiveAccount(account: Account): boolean {
+  return !account.status || account.status.toUpperCase() === 'ACTIVE';
+}
+
 export function TransferForm({ accounts, onTransferComplete }: TransferFormProps) {
   const [fromAccount, setFromAccount] = useState<string>('');
   const [toAccount, setToAccount] = useState<string>('');
@@ -16,8 +20,9 @@ export function TransferForm({ accounts, onTransferComplete }: TransferFormProps
   const [message, setMessage] = useState<string | null>(null);
   const [messageType, setMessageType] = useState<'success' | 'error' | null>(null);
 
-  // const activeAccounts = accounts.filter((a) => a.status === 'ACTIVE');
-  async function handleSubmit(e: React.FormEvent) {
+  const activeAccounts = accounts.filter(isActiveAccount);
+
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setMessage(null);
     setMessageType(null);
@@ -31,6 +36,21 @@ export function TransferForm({ accounts, onTransferComplete }: TransferFormProps
 
     if (fromAccount === toAccount) {
       setMessage('From and to accounts must be different.');
+      setMessageType('error');
+      return;
+    }
+
+    const fromAccountDetails = accounts.find((account) => account.id === fromAccount);
+    const toAccountDetails = accounts.find((account) => account.id === toAccount);
+
+    if (!fromAccountDetails || !toAccountDetails) {
+      setMessage('Please select valid accounts.');
+      setMessageType('error');
+      return;
+    }
+
+    if (!isActiveAccount(fromAccountDetails) || !isActiveAccount(toAccountDetails)) {
+      setMessage('Only active accounts can be used in transfers.');
       setMessageType('error');
       return;
     }
@@ -61,11 +81,11 @@ export function TransferForm({ accounts, onTransferComplete }: TransferFormProps
     }
   }
 
-  if (accounts.length === 0) {
+  if (accounts.length === 0 || activeAccounts.length === 0) {
     return (
       <section className="transfer-form">
         <h2>Transfer Money</h2>
-        <p className="status-message">No accounts available for transfer.</p>
+        <p className="status-message">No active accounts available for transfer.</p>
       </section>
     );
   }
@@ -82,7 +102,7 @@ export function TransferForm({ accounts, onTransferComplete }: TransferFormProps
             onChange={(e) => setFromAccount(e.target.value)}
           >
             <option value="">-- Select --</option>
-            {accounts.map((a) => (
+            {activeAccounts.map((a) => (
               <option key={a.id} value={a.id}>
                 {a.id} ({a.accountType}, {formatCurrency(a.balance)})
               </option>
@@ -97,7 +117,7 @@ export function TransferForm({ accounts, onTransferComplete }: TransferFormProps
             onChange={(e) => setToAccount(e.target.value)}
           >
             <option value="">-- Select --</option>
-            {accounts.map((a) => (
+            {activeAccounts.map((a) => (
               <option key={a.id} value={a.id}>
                 {a.id} ({a.accountType}, {formatCurrency(a.balance)})
               </option>

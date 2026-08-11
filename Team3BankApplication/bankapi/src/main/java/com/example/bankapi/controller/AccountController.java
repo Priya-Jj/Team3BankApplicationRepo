@@ -89,22 +89,22 @@ public class AccountController {
 
     // TODO 10: Add this endpoint to AccountController.
 // For a regular account holder it returns only accounts whose customerId
-// matches their sub. For a teller or auditor it returns all accounts.
+// matches their sub. For a teller it returns all accounts.
 //
 // Read jwt.getSubject() and jwt.getClaimAsStringList("roles").
 // Filter ACCOUNTS by customerId for account holders.
-// Return the full list for tellers and auditors.
+// Return the full list for tellers.
     @GetMapping("/mine")
     public List<Account> getMyAccounts(@AuthenticationPrincipal Jwt jwt) {
-        // TODO 11: Read the caller's subject (customer ID, employee ID, or auditor ID)
-        //          and roles list. If "teller" or "auditor" is in the roles, return
+        // TODO 11: Read the caller's subject (customer_number or staff username)
+        //          and roles list. If "teller" is in the roles, return
         //          ACCOUNTS in full. Otherwise filter to accounts where
         //          customerId equals the subject.
 
         String sub =jwt.getSubject();
         List<String> roles = jwt.getClaimAsStringList("roles");
         assert roles != null;
-        if (roles.stream().anyMatch(role -> role.equals("teller") || role.equals("auditor"))) {
+        if (roles.stream().anyMatch(role -> role.equals("teller"))) {
             return transferService.listAccounts();
         }
         else  {
