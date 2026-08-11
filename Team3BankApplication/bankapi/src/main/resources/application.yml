@@ -2,6 +2,12 @@ server:
   port: 8081
 
 spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
   security:
     oauth2:
       resourceserver:
@@ -9,11 +15,11 @@ spring:
           # Spring Security fetches the public keys from this endpoint on startup
           # and caches them. The key whose "kid" matches the incoming token's
           # "kid" header claim is used to verify the signature.
-          jwks-uri: http://127.0.0.1:9000/oauth2/jwks
+          jwks-uri: http://localhost:9000/oauth2/jwks
 
           # The expected value of the "iss" claim in every incoming token.
           # Tokens where "iss" does not equal this value are rejected with 401.
-          issuer-uri: http://127.0.0.1:9000
+          issuer-uri: http://localhost:9000
       client:
         registration:
           downstream-api:
@@ -26,4 +32,8 @@ spring:
             scope: account.read
         provider:
           downstream-api:
-            token-uri: http://127.0.0.1:9000/oauth2/token
+            token-uri: http://localhost:9000/oauth2/token
+
+app:
+  kafka:
+    topic: transaction-stats
