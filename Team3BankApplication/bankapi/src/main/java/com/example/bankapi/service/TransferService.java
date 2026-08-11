@@ -22,6 +22,7 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 @Service
 public class TransferService {
+    private final TransactionStatsPublisher statsPublisher;
 
     // Same account IDs as AccountController's static list, but kept here
     // mutably so transfers can change balances. The two lists drift; in
@@ -35,6 +36,10 @@ public class TransferService {
     ));
 
     private final ReentrantLock lock = new ReentrantLock();
+
+    public TransferService(TransactionStatsPublisher statsPublisher) {
+        this.statsPublisher = statsPublisher;
+    }
 
     public List<Account> listAccounts() {
         lock.lock();
@@ -68,6 +73,15 @@ public class TransferService {
             accounts.set(toIndex, new Account(
                     to.id(), to.customerId(), to.accountType(),
                     to.balance().add(request.amount())));
+
+            // Publish anonymized statistics for each leg of the internal transfer.
+            try {
+                statsPublisher.publish("TRANSFER_OUT", request.amount());
+                statsPublisher.publish("TRANSFER_IN", request.amount());
+            } catch (Exception ex) {
+                // Ensure the transfer succeeds even if Kafka is temporarily unavailable.
+                System.err.println("Failed to publish transaction stats: " + ex.getMessage());
+            }
 
             String txnId = "T-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
             return new TransferResponse(txnId, TransactionStatus.COMPLETE);
