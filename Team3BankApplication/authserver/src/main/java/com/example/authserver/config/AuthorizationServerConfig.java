@@ -197,7 +197,7 @@ public class AuthorizationServerConfig {
         String pwd = encoder.encode("password");   // LAB ONLY -- same password for all users
 
         Map<String, BankUser> users = Map.of(
-                "alice",  new BankUser("C001",  "alice",  pwd, "Alice Nguyen",
+                "alice",  new BankUser("1",  "alice",  pwd, "Alice Nguyen",
                         "account_holder", ACCOUNT_HOLDER_SCOPES),
                 "bob",    new BankUser("C002",  "bob",    pwd, "Bob Patel",
                         "account_holder", ACCOUNT_HOLDER_SCOPES),
