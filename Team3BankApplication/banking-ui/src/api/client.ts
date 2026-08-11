@@ -33,6 +33,36 @@ export async function getAccounts(): Promise<Account[]> {
   return response.json();
 }
 
+export async function getAccountByCustomerName(customerNumber: string): Promise<Account[]> {
+  const response = await fetch(`/api/customers/${customerNumber}/accounts`, {
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to load accounts: ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function getAccountById(accountId: string): Promise<Account[]> {
+  const response = await fetch(`/api/accounts/${accountId}`, {
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to load account: ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function getTransactionById(accountId: string): Promise<Account[]> {
+  const response = await fetch(`/api/accounts/${accountId}/transactions`, {
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to load transactions: ${response.status}`);
+  }
+  return response.json();
+}
+
 export async function postTransfer(
   request: TransferRequest
 ): Promise<TransferResponse> {

@@ -12,10 +12,10 @@ import java.util.Set;
  * A UserDetails implementation that carries the domain attributes
  * this Authorization Server needs to put into the JWT:
  *
- *   subjectId      -- becomes the "sub" claim (C001, EM01, AUD01, ...)
- *   username       -- the login name (alice, edward, ...) -> "preferred_username"
+ *   subjectId      -- becomes the "sub" claim (customer_number like 487-978493 or staff username like teller1)
+ *   username       -- the login name (customer_number or staff username) -> "preferred_username"
  *   fullName       -- display name -> "name"
- *   role           -- single role like "account_holder", "teller", "auditor"
+ *   role           -- single role: "account_holder" or "teller"
  *   allowedScopes  -- the maximum scope set this user is entitled to
  *
  * The token customizer pulls these directly off the principal at JWT

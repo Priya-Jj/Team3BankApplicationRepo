@@ -18,40 +18,39 @@ public class AccountService {
     private final Map<String, Account> store = new ConcurrentHashMap<>();
 
     public AccountService() {
-        store.put("A001", new Account("A001", "C001", "CHECKING", new BigDecimal("1250.00")));
-        store.put("A002", new Account("A002", "C001", "SAVINGS",  new BigDecimal("8400.00")));
-        store.put("A003", new Account("A003", "C002", "CHECKING", new BigDecimal("300.50")));
-        store.put("A004", new Account("A004", "C003", "CHECKING", new BigDecimal("2100.75")));
-        store.put("A005", new Account("A005", "C003", "SAVINGS",  new BigDecimal("15000.00")));
+        store.put("A001", new Account("A001", "487-978493", "CHECKING", new BigDecimal("1250.00")));
+        store.put("A002", new Account("A002", "487-978493", "SAVINGS",  new BigDecimal("8400.00")));
+        store.put("A003", new Account("A003", "487-978494", "CHECKING", new BigDecimal("300.50")));
+        store.put("A004", new Account("A004", "487-978495", "CHECKING", new BigDecimal("2100.75")));
+        store.put("A005", new Account("A005", "487-978495", "SAVINGS",  new BigDecimal("15000.00")));
     }
 
-    // TODO 12: Add @PreAuthorize that restricts this to tellers and auditors only.
+    // TODO 12: Add @PreAuthorize that restricts this to tellers only.
     //          An account holder should NEVER be able to list every account in the bank.
-    //          Hint: "hasRole('TELLER') or hasRole('AUDITOR')"
-    @PreAuthorize("hasRole('TELLER') or hasRole('AUDITOR')")
+    //          Hint: "hasRole('TELLER')"
+    @PreAuthorize("hasRole('TELLER')")
     public List<Account> findAll() {
         return new ArrayList<>(store.values());
     }
 
     // TODO 13: Add @PreAuthorize requiring the SCOPE_account.read authority.
     //          Then add @PostAuthorize so the returned account is only visible if:
-    //            - the caller is a teller or auditor, OR
+    //            - the caller is a teller, OR
     //            - the account's customerId equals authentication.name
-    //          Hint: "returnObject.isEmpty() or hasRole('TELLER') or hasRole('AUDITOR')
+    //          Hint: "returnObject.isEmpty() or hasRole('TELLER')
     //                 or returnObject.get().customerId() == authentication.name"
     //          @PostAuthorize sees the method's return value via 'returnObject'.
     @PreAuthorize("hasAuthority('SCOPE_account.read')")
-    @PostAuthorize("returnObject.isEmpty() or hasRole('TELLER') or hasRole('AUDITOR') or returnObject.get().customerId() == authentication.name")
+    @PostAuthorize("returnObject.isEmpty() or hasRole('TELLER') or returnObject.get().customerId() == authentication.name")
     public Optional<Account> findById(String id) {
         return Optional.ofNullable(store.get(id));
     }
 
     // TODO 14: Add @PreAuthorize that allows callers to look up their own accounts
-    //          by customer ID, and allows tellers and auditors to look up any customer's:
-    //            "#customerId == authentication.name
-    //             or hasRole('TELLER') or hasRole('AUDITOR')"
+    //          by customer ID, and allows tellers to look up any customer's:
+    //            "#customerId == authentication.name or hasRole('TELLER')"
     //          The #customerId prefix references the method parameter directly.
-    @PreAuthorize("#customerId == authentication.name or hasRole('TELLER') or hasRole('AUDITOR')")
+    @PreAuthorize("#customerId == authentication.name or hasRole('TELLER')")
     public List<Account> findByCustomerId(String customerId) {
         return store.values().stream()
                 .filter(a -> a.customerId().equals(customerId))
@@ -61,8 +60,7 @@ public class AccountService {
     // TODO 15: Add @PreAuthorize requiring BOTH:
     //            hasAuthority('SCOPE_account.create') AND hasRole('TELLER')
     //          Combine them with 'and' (or '&&' -- both work in SpEL).
-    //          An auditor has account.read but no create scope and no teller role,
-    //          so this denies them even though they can read everything.
+    //          Only tellers can create accounts.
     @PreAuthorize("hasAuthority('SCOPE_account.create') and hasRole('TELLER')")
     public Account create(Account account) {
         store.put(account.id(), account);
