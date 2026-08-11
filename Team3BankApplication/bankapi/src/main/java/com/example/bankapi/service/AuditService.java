@@ -20,8 +20,8 @@ public class AuditService {
 
         if (auth != null && auth.getPrincipal() instanceof Jwt jwt) {
             // TODO 9: Assign the subject from jwt.getSubject() to the subject variable.
-            // Remember: this will be a customer ID (C001), employee ID (EM01),
-            // or auditor ID (AUD01) -- never a login name like "alice".
+            // Remember: this will be a customer_number (487-978493) or staff username (teller1)
+            // -- never a login name like the old format.
             subject = jwt.getSubject();
         }
 

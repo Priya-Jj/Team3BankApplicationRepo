@@ -28,11 +28,11 @@ public class TransferService {
     // mutably so transfers can change balances. The two lists drift; in
     // a real app there would be a single source of truth (the database).
     private final List<Account> accounts = new ArrayList<>(List.of(
-            new Account("A001", "C001", "CHECKING", new BigDecimal("1250.00")),
-            new Account("A002", "C001", "SAVINGS",  new BigDecimal("8400.00")),
-            new Account("A003", "C002", "CHECKING", new BigDecimal("300.50")),
-            new Account("A004", "C003", "CHECKING", new BigDecimal("2100.75")),
-            new Account("A005", "C003", "SAVINGS",  new BigDecimal("15000.00"))
+            new Account("A001", "487-978493", "CHECKING", new BigDecimal("1250.00")),
+            new Account("A002", "487-978493", "SAVINGS",  new BigDecimal("8400.00")),
+            new Account("A003", "487-978494", "CHECKING", new BigDecimal("300.50")),
+            new Account("A004", "487-978495", "CHECKING", new BigDecimal("2100.75")),
+            new Account("A005", "487-978495", "SAVINGS",  new BigDecimal("15000.00"))
     ));
 
     private final ReentrantLock lock = new ReentrantLock();
