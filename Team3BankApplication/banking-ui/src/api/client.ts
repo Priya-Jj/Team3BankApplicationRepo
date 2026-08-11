@@ -33,7 +33,7 @@ export async function getAccounts(): Promise<Account[]> {
   return response.json();
 }
 
-export async function getAccountByCustomerName(customerNumber: string): Promise<Account[]> {
+export async function getAccountByCustomerNumber(customerNumber: string): Promise<Account[]> {
   const response = await fetch(`/api/customers/${customerNumber}/accounts`, {
     headers: { Accept: 'application/json' },
   });

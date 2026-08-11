@@ -18,11 +18,11 @@ public class AccountService {
     private final Map<String, Account> store = new ConcurrentHashMap<>();
 
     public AccountService() {
-        store.put("A001", new Account("A001", "487-978493", "CHECKING", new BigDecimal("1250.00")));
-        store.put("A002", new Account("A002", "487-978493", "SAVINGS",  new BigDecimal("8400.00")));
-        store.put("A003", new Account("A003", "487-978494", "CHECKING", new BigDecimal("300.50")));
-        store.put("A004", new Account("A004", "487-978495", "CHECKING", new BigDecimal("2100.75")));
-        store.put("A005", new Account("A005", "487-978495", "SAVINGS",  new BigDecimal("15000.00")));
+        store.put("A001", new Account("A001", "487-978493", "CHECKING", new BigDecimal("1250.00"), "ACTIVE"));
+        store.put("A002", new Account("A002", "487-978493", "SAVINGS",  new BigDecimal("8400.00"), "ACTIVE"));
+        store.put("A003", new Account("A003", "487-978494", "CHECKING", new BigDecimal("300.50"), "ACTIVE"));
+        store.put("A004", new Account("A004", "487-978495", "CHECKING", new BigDecimal("2100.75"), "ACTIVE"));
+        store.put("A005", new Account("A005", "487-978495", "SAVINGS",  new BigDecimal("15000.00"), "INACTIVE"));
     }
 
     // TODO 12: Add @PreAuthorize that restricts this to tellers only.

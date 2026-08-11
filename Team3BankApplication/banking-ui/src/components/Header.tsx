@@ -2,11 +2,10 @@
  * Header component.
  *
  * Reads the current user from the auth context. When a user is logged in, shows
- * their name and a Sign-out button.
+ * their name, role, and a Sign-out button.
  */
 
 import { useAuth } from '../auth/AuthContext';
-import { logout as logoutApi } from '../api/client';
 
 export function Header() {
   const { user, refresh } = useAuth();
@@ -14,6 +13,16 @@ export function Header() {
   async function handleSignOut() {
     window.location.href = '/logout';
   }
+
+  const getUserRoleDisplay = () => {
+    if (!user?.roles || user.roles.length === 0) {
+      return 'User';
+    }
+    // Format role for display (e.g., 'account_holder' -> 'Account Holder')
+    return user.roles
+      .map(role => role.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '))
+      .join(', ');
+  };
 
   return (
     <header className="header">
@@ -24,7 +33,10 @@ export function Header() {
         </div>
         {user && (
           <div className="header-user">
-            <span className="user-name">Hello, {user.preferredUsername}</span>
+            <div className="user-info">
+              <span className="user-name">Hello, {user.preferredUsername}</span>
+              <span className="user-role">Role: {getUserRoleDisplay()}</span>
+            </div>
             <button type="button" onClick={handleSignOut} className="sign-out-button">
               Sign out
             </button>
