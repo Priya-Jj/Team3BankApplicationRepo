@@ -10,10 +10,11 @@ export type AccountStatus = 'ACTIVE' | 'INACTIVE';
 export type AccountType = 'SAVINGS' | 'CHECKING';
 
 export type Account = {
-  accountNumber: string;
-  status: AccountStatus;
+  id: string;
+  customerId: string;
+  accountType: AccountType;
   balance: number;
-  type: AccountType;
+  status?: AccountStatus;
 };
 
 export type Customer = {
@@ -36,12 +37,19 @@ export type Transaction = {
 };
 
 export type TransferRequest = {
-  fromAccountNumber: string;
-  toAccountNumber: string;
+  fromAccountId: string;
+  toAccountId: string;
   amount: number;
 };
 
 export type TransferResponse = {
   transactionId: string;
   status: TransactionStatus;
+};
+
+export type User = {
+  subject: string;
+  preferredUsername: string;
+  fullName: string;
+  roles: string[];
 };
