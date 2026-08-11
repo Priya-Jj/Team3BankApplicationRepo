@@ -149,7 +149,13 @@ public class AuthorizationServerConfig {
             throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
-                .formLogin(Customizer.withDefaults());
+                .formLogin(Customizer.withDefaults())
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login?logout")
+                        .invalidateHttpSession(true)
+                        .clearAuthentication(true)
+                        .deleteCookies("JSESSIONID"));
         return http.build();
     }
 
@@ -305,6 +311,8 @@ public class AuthorizationServerConfig {
                 .redirectUri("http://localhost:8080/login/oauth2/code/bank-auth")
                 // Through Vite proxy (Lab 4.7 React integration)  <-- NEW
                 .redirectUri("http://localhost:5173/login/oauth2/code/bank-auth")
+                .postLogoutRedirectUri("http://localhost:8080/")
+                .postLogoutRedirectUri("http://localhost:5173/")
                 .scope(OidcScopes.OPENID)
                 .scope(OidcScopes.PROFILE)
                 // The full set of bank scopes. The token customizer in Lab 2-1
