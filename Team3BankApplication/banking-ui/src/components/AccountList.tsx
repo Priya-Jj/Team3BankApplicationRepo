@@ -26,7 +26,7 @@ export function AccountList({ accounts, loading, error }: AccountListProps) {
       <table>
         <thead>
           <tr>
-            <th>Account</th>
+            <th>Account ID</th>
             <th>Type</th>
             <th>Status</th>
             <th>Balance</th>

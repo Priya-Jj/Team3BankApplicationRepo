@@ -22,6 +22,7 @@ import { useAuth } from './auth/AuthContext';
 import { getAccounts, getAccountByCustomerNumber } from './api/client';
 import type { Account } from './api/types';
 import './App.css';
+import './theme.css';
 
 export function App() {
   const { user, loading: authLoading } = useAuth();
