@@ -19,7 +19,7 @@ import { TellerScreen } from './components/TellerScreen';
 import { TransferForm } from './components/TransferForm';
 import { SignInScreen } from './components/SignInScreen';
 import { useAuth } from './auth/AuthContext';
-import { getAccounts, getAccountByCustomerNumber } from './api/client';
+import { getByCustomerNumber, getAccounts } from './api/client';
 import type { Account } from './api/types';
 import './App.css';
 
@@ -35,14 +35,7 @@ export function App() {
     setAccountsLoading(true);
     setAccountsError(null);
     try {
-      let data: Account[] = [];
-      const isTeller = user?.roles.includes('teller') ?? false;
-      if (isTeller) {
-        data = await getAccounts();
-      } else {
-        // Account holders: fetch only their accounts by customer number (subject)
-        data = await getAccountByCustomerNumber(user.subject);
-      }
+      const data =  isTeller ? await getAccounts() : await getByCustomerNumber('487-978493');
       setAccounts(data);
     } catch (e) {
       setAccountsError(e instanceof Error ? e.message : 'Unknown error');
