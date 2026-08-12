@@ -19,7 +19,7 @@ import { TellerScreen } from './components/TellerScreen';
 import { TransferForm } from './components/TransferForm';
 import { SignInScreen } from './components/SignInScreen';
 import { useAuth } from './auth/AuthContext';
-import { getAccounts } from './api/client';
+import { getByCustomerNumber, getAccounts } from './api/client';
 import type { Account } from './api/types';
 import './App.css';
 
@@ -34,7 +34,7 @@ export function App() {
     setAccountsLoading(true);
     setAccountsError(null);
     try {
-      const data = await getAccounts();
+      const data =  isTeller ? await getAccounts() : await getByCustomerNumber('487-978493');
       setAccounts(data);
     } catch (e) {
       setAccountsError(e instanceof Error ? e.message : 'Unknown error');
