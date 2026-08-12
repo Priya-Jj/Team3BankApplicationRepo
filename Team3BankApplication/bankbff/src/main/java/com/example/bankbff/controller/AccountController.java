@@ -5,6 +5,7 @@ import com.example.bankbff.dto.AccountDto;
 import com.example.bankbff.dto.CashTransactionRequestDto;
 import com.example.bankbff.dto.TransferRequestDto;
 import com.example.bankbff.dto.TransferResponseDto;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,7 +33,12 @@ public class AccountController {
 
     @GetMapping("/accounts")
     public List<AccountDto> accounts() {
-        return bankingApiClient.getAccountsByCustomerId();
+        return bankingApiClient.getAccounts();
+    }
+
+    @GetMapping("/accounts/{customerNumber}")
+    public List<AccountDto> accounts(@PathVariable String customerNumber) {
+        return bankingApiClient.getAccountsByCustomerNumber(customerNumber);
     }
 
     @PostMapping("/transfers")

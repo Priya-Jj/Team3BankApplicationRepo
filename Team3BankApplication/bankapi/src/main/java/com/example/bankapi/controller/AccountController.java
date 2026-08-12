@@ -41,15 +41,13 @@ public class AccountController {
     }
 
     @GetMapping
-    public List<AccountsDto> getByCustomerId() {
-        return accountService.getByCustomerId(1L);
+    public List<AccountsDto> getAll() {
+        return accountService.findAll();
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<AccountsDto> getById(@PathVariable Long id) {
-        auditService.logEvent("READ_ACCOUNT", id.toString());
-
-        return ResponseEntity.ok(accountService.findById(id));
+    @GetMapping("/{customerNumber}")
+    public List<AccountsDto> getByCustomerNumber(@PathVariable String customerNumber) {
+        return accountService.getByCustomerNumber(customerNumber);
     }
 
     // TODO 1: Add a POST endpoint that accepts an Account in the request body

@@ -54,12 +54,12 @@ public class AccountService {
 
     // TODO 14: Add @PreAuthorize that allows callers to look up their own accounts
     //          by customer ID, and allows tellers and auditors to look up any customer's:
-    //            "#customerId == authentication.name
+    //            "#customerNumber == authentication.name
     //             or hasRole('TELLER') or hasRole('AUDITOR')"
-    //          The #customerId prefix references the method parameter directly.
-    //@PreAuthorize("#customerId == authentication.name or hasRole('TELLER') or hasRole('AUDITOR')")
-    public List<AccountsDto> getByCustomerId(Long customerId) {
-        return accountRepository.getByCustomerId(customerId).stream()
+    //          The #customerNumber prefix references the method parameter directly.
+    @PreAuthorize("#customerNumber == authentication.name or hasRole('TELLER') or hasRole('AUDITOR')")
+    public List<AccountsDto> getByCustomerNumber(String customerNumber) {
+        return accountRepository.findAccountsByCustomerNumber(customerNumber).stream()
                 .map(this::toDto)
                 .toList();
     }
