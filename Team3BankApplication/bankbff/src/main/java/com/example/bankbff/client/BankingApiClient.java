@@ -26,7 +26,7 @@ public class BankingApiClient {
         this.bankApiWebClient = bankApiWebClient;
     }
 
-    public List<AccountDto> getAccounts() {
+    public List<AccountDto> getAccountsByCustomerId() {
         // TODO 6.1: GET /api/v1/accounts and deserialize to List<AccountDto>.
         // Use ParameterizedTypeReference<List<AccountDto>>() {} for the body type.
         //

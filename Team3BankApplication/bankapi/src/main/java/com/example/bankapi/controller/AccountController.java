@@ -1,6 +1,8 @@
 package com.example.bankapi.controller;
 
+import com.example.bankapi.dto.AccountsDto;
 import com.example.bankapi.model.Account;
+import com.example.bankapi.service.AccountService;
 import com.example.bankapi.model.CashTransactionRequest;
 import com.example.bankapi.model.CashTransactionResponse;
 import com.example.bankapi.service.AuditService;
@@ -26,30 +28,28 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/v1/accounts")
 public class AccountController {
+    private final AccountService accountService;
     private final AuditService auditService;
     private final DownstreamAccountService downstreamAccountService;
     private final TransferService transferService;
 
-    public AccountController(AuditService auditService, DownstreamAccountService downstreamAccountService, TransferService transferService) {
+    public AccountController(AccountService accountService, AuditService auditService, DownstreamAccountService downstreamAccountService, TransferService transferService) {
+        this.accountService = accountService;
         this.auditService = auditService;
         this.downstreamAccountService = downstreamAccountService;
         this.transferService = transferService;
     }
 
     @GetMapping
-    public List<Account> getAll() {
-        return transferService.listAccounts();
+    public List<AccountsDto> getByCustomerId() {
+        return accountService.getByCustomerId(1L);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Account> getById(@PathVariable String id) {
-        auditService.logEvent("READ_ACCOUNT", id);
+    public ResponseEntity<AccountsDto> getById(@PathVariable Long id) {
+        auditService.logEvent("READ_ACCOUNT", id.toString());
 
-        return transferService.listAccounts().stream()
-                .filter(a -> a.id().equals(id))
-                .findFirst()
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(accountService.findById(id));
     }
 
     // TODO 1: Add a POST endpoint that accepts an Account in the request body

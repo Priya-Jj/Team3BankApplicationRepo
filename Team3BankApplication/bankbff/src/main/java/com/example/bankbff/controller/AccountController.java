@@ -32,8 +32,7 @@ public class AccountController {
 
     @GetMapping("/accounts")
     public List<AccountDto> accounts() {
-        // TODO 7.2: Return bankingApiClient.getAccounts().
-        return bankingApiClient.getAccounts();
+        return bankingApiClient.getAccountsByCustomerId();
     }
 
     @PostMapping("/transfers")
