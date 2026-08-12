@@ -1,15 +1,19 @@
 package com.example.bankapi.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class AccountsDto {
+    @JsonProperty("id")
     private Long accountId;
     private String accountNumber;
     private Long customerId;
     private String accountType;
+    @JsonProperty("status")
     private String accountStatus;
     private BigDecimal balance;
     private LocalDateTime openedDate;

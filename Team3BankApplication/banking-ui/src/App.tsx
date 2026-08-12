@@ -35,7 +35,7 @@ export function App() {
     setAccountsLoading(true);
     setAccountsError(null);
     try {
-      const data =  isTeller ? await getAccounts() : await getByCustomerNumber('487-978493');
+      const data =  isTeller ? await getAccounts() : await getByCustomerNumber(user.subject);
       setAccounts(data);
     } catch (e) {
       setAccountsError(e instanceof Error ? e.message : 'Unknown error');
