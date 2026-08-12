@@ -25,7 +25,7 @@ public class BankingApiClient {
         this.bankApiWebClient = bankApiWebClient;
     }
 
-    public List<AccountDto> getAccountsByCustomerId() {
+    public List<AccountDto> getAccounts() {
         // TODO 6.1: GET /api/v1/accounts and deserialize to List<AccountDto>.
         // Use ParameterizedTypeReference<List<AccountDto>>() {} for the body type.
         //
@@ -34,6 +34,17 @@ public class BankingApiClient {
                    .retrieve()
         .bodyToMono(new ParameterizedTypeReference<List<AccountDto>>() {})
         .block();
+    }
+
+    public List<AccountDto> getAccountsByCustomerNumber(String customerNumber) {
+        // TODO 6.1: GET /api/v1/accounts and deserialize to List<AccountDto>.
+        // Use ParameterizedTypeReference<List<AccountDto>>() {} for the body type.
+        //
+        return bankApiWebClient.get()
+                .uri("/api/v1/accounts/{customerNumber}", customerNumber)
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<List<AccountDto>>() {})
+                .block();
     }
 
     public TransferResponseDto postTransfer(TransferRequestDto request) {

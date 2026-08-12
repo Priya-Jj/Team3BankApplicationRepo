@@ -23,6 +23,12 @@ public interface AccountRepository extends JpaRepository<Accounts, Long> {
     Optional<Accounts> findByAccountNumber(String accountNumber);
 
     /**
+     * Find all accounts.
+     */
+    @Query("SELECT a FROM Accounts a")
+    List<Accounts> findAll();
+
+    /**
      * Find all accounts belonging to a specific customer.
      */
     List<Accounts> findByCustomer(Customer customer);
@@ -57,6 +63,12 @@ public interface AccountRepository extends JpaRepository<Accounts, Long> {
      */
     @Query("SELECT a FROM Accounts a WHERE a.customer.id = :customerId AND a.accountType = :accountType")
     List<Accounts> findAccountsByCustomerAndType(@Param("customerId") Long customerId, @Param("accountType") AccountType accountType);
+
+    /**
+     * Custom query to find accounts by customer number and account type.
+     */
+    @Query("SELECT a FROM Accounts a WHERE a.customer.customerNumber = :customerNumber")
+    List<Accounts> findAccountsByCustomerNumber(@Param("customerNumber") String customerNumber);
 
     /**
      * Custom query to find all active accounts ordered by balance in descending order.
