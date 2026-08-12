@@ -23,9 +23,6 @@ spring:
     properties:
       hibernate:
         format_sql: true
-  config:
-    import:
-      - optional:classpath:docker-compose.yml
   security:
     oauth2:
       resourceserver:
