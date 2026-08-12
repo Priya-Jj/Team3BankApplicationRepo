@@ -1,15 +1,22 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { postTransfer } from '../api/client';
-import type { Account } from '../api/types';
+import type { Account, CashTransactionRecord } from '../api/types';
 import { formatCurrency } from '../utils/format';
+import { DepositWithdrawal } from './DepositWithdrawal';
+import { TransactionHistory } from './TransactionHistory';
 
 type TellerScreenProps = {
   accounts: Account[];
   loading: boolean;
   error: string | null;
+  onRefreshAccounts?: () => Promise<void> | void;
 };
 
-export function TellerScreen({ accounts, loading, error }: TellerScreenProps) {
+function isActiveAccount(account: Account): boolean {
+  return (account.status ?? 'ACTIVE').toUpperCase() === 'ACTIVE';
+}
+
+export function TellerScreen({ accounts, loading, error, onRefreshAccounts }: TellerScreenProps) {
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [fromAccount, setFromAccount] = useState('');
   const [toAccount, setToAccount] = useState('');
@@ -17,6 +24,8 @@ export function TellerScreen({ accounts, loading, error }: TellerScreenProps) {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [messageType, setMessageType] = useState<'success' | 'error' | null>(null);
+  const [transactions, setTransactions] = useState<CashTransactionRecord[]>([]);
+  const [activeTab, setActiveTab] = useState<'transfer' | 'cash' | 'history'>('transfer');
 
   const customerIds = useMemo(() => {
     return Array.from(new Set(accounts.map((account) => account.customerId))).sort();
@@ -33,7 +42,7 @@ export function TellerScreen({ accounts, loading, error }: TellerScreenProps) {
     if (!selectedCustomerId) {
       return [];
     }
-    return selectedCustomerAccounts.filter((account) => account.status === 'ACTIVE');
+    return selectedCustomerAccounts.filter((account) => isActiveAccount(account));
   }, [selectedCustomerAccounts, selectedCustomerId]);
 
   useEffect(() => {
@@ -91,7 +100,7 @@ export function TellerScreen({ accounts, loading, error }: TellerScreenProps) {
       return;
     }
 
-    if (fromAccountDetails.status !== 'ACTIVE' || toAccountDetails.status !== 'ACTIVE') {
+    if (!isActiveAccount(fromAccountDetails) || !isActiveAccount(toAccountDetails)) {
       setMessage('Only active accounts can be used in transfers.');
       setMessageType('error');
       return;
@@ -114,6 +123,7 @@ export function TellerScreen({ accounts, loading, error }: TellerScreenProps) {
         setFromAccount('');
         setToAccount('');
         setAmount('');
+        await onRefreshAccounts?.();
       }
     } catch (e) {
       setMessage(e instanceof Error ? e.message : 'Transfer failed.');
@@ -178,96 +188,121 @@ export function TellerScreen({ accounts, loading, error }: TellerScreenProps) {
         )}
       </section>
 
-      <section className="transfer-form customer-transfer">
-        <div className="section-header">
-          <h2>Transfer Between Customer Accounts</h2>
-        </div>
-        <p>Select a customer and transfer funds between that customer's own accounts only.</p>
-
-        <div className="form-row">
-          <label htmlFor="customer-select">Customer</label>
-          <select
-            id="customer-select"
-            value={selectedCustomerId}
-            onChange={(e) => {
-              setSelectedCustomerId(e.target.value);
-              setFromAccount('');
-              setToAccount('');
-              setAmount('');
-              setMessage(null);
-              setMessageType(null);
-            }}
-          >
-            <option value="">-- Select customer --</option>
-            {customerIds.map((customerId) => (
-              <option key={customerId} value={customerId}>
-                {customerId}
-              </option>
-            ))}
-          </select>
+      <section className="teller-tabs">
+        <div className="tabs">
+          <button type="button" className={activeTab === 'transfer' ? 'active' : ''} onClick={() => setActiveTab('transfer')}>Transfer</button>
+          <button type="button" className={activeTab === 'cash' ? 'active' : ''} onClick={() => setActiveTab('cash')}>Deposit / Withdrawal</button>
+          <button type="button" className={activeTab === 'history' ? 'active' : ''} onClick={() => setActiveTab('history')}>Recent History</button>
         </div>
 
-        {!selectedCustomerId ? (
-          <p className="status-message">Choose a customer to begin.</p>
-        ) : transferableAccounts.length < 2 ? (
-          <p className="status-message">This customer does not have enough active accounts to make a transfer.</p>
-        ) : (
-          <form onSubmit={handleTransferSubmit}>
-            <div className="form-row">
-              <label htmlFor="teller-from-account">From Account</label>
-              <select
-                id="teller-from-account"
-                value={fromAccount}
-                onChange={(e) => setFromAccount(e.target.value)}
-              >
-                <option value="">-- Select --</option>
-                {transferableAccounts.map((account) => (
-                  <option key={account.id} value={account.id}>
-                    {account.id} ({account.accountType}, {formatCurrency(account.balance)})
-                  </option>
-                ))}
-              </select>
-            </div>
+        <div className="tab-content">
+          {activeTab === 'transfer' && (
+            <section className="transfer-form customer-transfer">
+              <div className="section-header">
+                <h2>Transfer Between Customer Accounts</h2>
+              </div>
+              <p>Select a customer and transfer funds between that customer's own accounts only.</p>
 
-            <div className="form-row">
-              <label htmlFor="teller-to-account">To Account</label>
-              <select
-                id="teller-to-account"
-                value={toAccount}
-                onChange={(e) => setToAccount(e.target.value)}
-              >
-                <option value="">-- Select --</option>
-                {transferableAccounts.map((account) => (
-                  <option key={account.id} value={account.id}>
-                    {account.id} ({account.accountType}, {formatCurrency(account.balance)})
-                  </option>
-                ))}
-              </select>
-            </div>
+              <div className="form-row">
+                <label htmlFor="customer-select">Customer</label>
+                <select
+                  id="customer-select"
+                  value={selectedCustomerId}
+                  onChange={(e) => {
+                    setSelectedCustomerId(e.target.value);
+                    setFromAccount('');
+                    setToAccount('');
+                    setAmount('');
+                    setMessage(null);
+                    setMessageType(null);
+                  }}
+                >
+                  <option value="">-- Select customer --</option>
+                  {customerIds.map((customerId) => (
+                    <option key={customerId} value={customerId}>
+                      {customerId}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            <div className="form-row">
-              <label htmlFor="teller-transfer-amount">Amount</label>
-              <input
-                id="teller-transfer-amount"
-                type="number"
-                step="0.01"
-                min="0.01"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-              />
-            </div>
+              {!selectedCustomerId ? (
+                <p className="status-message">Choose a customer to begin.</p>
+              ) : transferableAccounts.length < 2 ? (
+                <p className="status-message">This customer does not have enough active accounts to make a transfer.</p>
+              ) : (
+                <form onSubmit={handleTransferSubmit}>
+                  <div className="form-row">
+                    <label htmlFor="teller-from-account">From Account</label>
+                    <select
+                      id="teller-from-account"
+                      value={fromAccount}
+                      onChange={(e) => setFromAccount(e.target.value)}
+                    >
+                      <option value="">-- Select --</option>
+                      {transferableAccounts.map((account) => (
+                        <option key={account.id} value={account.id}>
+                          {account.id} ({account.accountType}, {formatCurrency(account.balance)})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-            <button type="submit" disabled={submitting}>
-              {submitting ? 'Processing...' : 'Submit Transfer'}
-            </button>
+                  <div className="form-row">
+                    <label htmlFor="teller-to-account">To Account</label>
+                    <select
+                      id="teller-to-account"
+                      value={toAccount}
+                      onChange={(e) => setToAccount(e.target.value)}
+                    >
+                      <option value="">-- Select --</option>
+                      {transferableAccounts.map((account) => (
+                        <option key={account.id} value={account.id}>
+                          {account.id} ({account.accountType}, {formatCurrency(account.balance)})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-            {message && (
-              <p className={messageType === 'success' ? 'success-message' : 'error-message'}>
-                {message}
-              </p>
-            )}
-          </form>
-        )}
+                  <div className="form-row">
+                    <label htmlFor="teller-transfer-amount">Amount</label>
+                    <input
+                      id="teller-transfer-amount"
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                    />
+                  </div>
+
+                  <button type="submit" disabled={submitting}>
+                    {submitting ? 'Processing...' : 'Submit Transfer'}
+                  </button>
+
+                  {message && (
+                    <p className={messageType === 'success' ? 'success-message' : 'error-message'}>
+                      {message}
+                    </p>
+                  )}
+                </form>
+              )}
+            </section>
+          )}
+
+          {activeTab === 'cash' && (
+            <DepositWithdrawal accounts={accounts} onRefreshAccounts={onRefreshAccounts} onAddTransaction={(r) => setTransactions((prev) => [r, ...prev].slice(0, 50))} />
+          )}
+
+          {activeTab === 'history' && (
+            <section className="recent-history">
+              <div className="section-header">
+                <h2>Recent Transactions</h2>
+              </div>
+              <TransactionHistory transactions={transactions} emptyMessage="No recent transactions" />
+            </section>
+          )}
+        </div>
       </section>
     </div>
   );

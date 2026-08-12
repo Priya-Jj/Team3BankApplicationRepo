@@ -3,12 +3,16 @@ package com.example.bankapi.controller;
 import com.example.bankapi.dto.AccountsDto;
 import com.example.bankapi.model.Account;
 import com.example.bankapi.service.AccountService;
+import com.example.bankapi.model.CashTransactionRequest;
+import com.example.bankapi.model.CashTransactionResponse;
 import com.example.bankapi.service.AuditService;
 import com.example.bankapi.service.DownstreamAccountService;
 import com.example.bankapi.service.TransferService;
+import jakarta.validation.Valid;
 import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -120,5 +124,17 @@ public class AccountController {
     public List<Account> getFromDownstream() {
         // TODO: call downstreamAccountService.fetchAllFromDownstream() and return the result
         return downstreamAccountService.fetchAllFromDownstream();
+    }
+
+    @PreAuthorize("hasAuthority('SCOPE_account.write') and hasRole('TELLER')")
+    @PostMapping("/{id}/transactions")
+    public ResponseEntity<CashTransactionResponse> recordCashTransaction(
+            @PathVariable String id,
+            @Valid @RequestBody CashTransactionRequest request) {
+        CashTransactionResponse response = transferService.recordCashTransaction(id, request.transactionType(), request.amount());
+        if (response.status() == com.example.bankapi.model.TransactionStatus.COMPLETE) {
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 }

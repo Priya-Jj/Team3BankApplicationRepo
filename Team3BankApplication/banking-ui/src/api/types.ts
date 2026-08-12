@@ -53,3 +53,24 @@ export type User = {
   fullName: string;
   roles: string[];
 };
+
+export type CashTransactionType = 'DEPOSIT' | 'WITHDRAWAL';
+
+export type CashTransactionRequest = {
+  transactionType: CashTransactionType;
+  amount: number;
+};
+
+export type CashTransactionResponse = {
+  transactionId: string;
+  status: TransactionStatus;
+};
+
+export type CashTransactionRecord = {
+  id: string;
+  accountId: string;
+  customerId: string;
+  type: CashTransactionType;
+  amount: number;
+  timestamp: string;
+};
