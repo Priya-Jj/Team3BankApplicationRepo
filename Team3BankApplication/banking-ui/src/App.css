@@ -416,3 +416,136 @@ main {
   color: #4a5568;
   font-size: 0.9rem;
 }
+
+.transaction-history {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.transaction-history h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: #2d3748;
+}
+
+.transaction-history ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.transaction-history li {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.8rem 1rem;
+  background-color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.transaction-history-main,
+.transaction-history-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.transaction-history-type {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.transaction-history-type.deposit {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.transaction-history-type.withdrawal {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.transaction-history-meta {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+/* Teller tabs */
+.teller-tabs {
+ background: white;
+ border-radius: 8px;
+ padding: 1rem;
+ box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+ border: 1px solid #e6eefc;
+}
+
+.tabs {
+ display: flex;
+ gap: 0.5rem;
+ margin-bottom: 1rem;
+ align-items: center;
+}
+
+.tabs button {
+ background: transparent;
+ border: none;
+ padding: 0.5rem 0.9rem;
+ border-radius: 8px 8px 0 0;
+ cursor: pointer;
+ font-weight: 600;
+ color: #475569;
+ transition: background-color 0.12s ease, color 0.12s ease, transform 0.06s ease;
+}
+
+.tabs button:hover {
+ background-color: #f1f8ff;
+ color: #1f6feb;
+ transform: translateY(-1px);
+}
+
+.tabs button.active {
+ background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+ color: #1f6feb;
+ box-shadow: 0 -2px 0 0 #1f6feb inset, 0 2px 6px rgba(31,111,235,0.08);
+}
+
+.tab-content {
+ padding: 1rem 0.5rem 0.25rem 0.5rem;
+ border-top: 1px solid #eef6ff;
+}
+
+/* Make forms inside tabs feel consistent */
+.teller-tabs .form-row {
+ margin-bottom: 0.9rem;
+}
+
+.teller-tabs .section-header {
+ margin-bottom: 0.75rem;
+}
+
+/* Responsive tweaks */
+@media (max-width: 720px) {
+ .tabs {
+   gap: 0.25rem;
+   overflow-x: auto;
+   -webkit-overflow-scrolling: touch;
+ }
+
+ .tabs button {
+   padding: 0.5rem 0.7rem;
+   font-size: 0.92rem;
+ }
+}

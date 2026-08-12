@@ -64,6 +64,7 @@ export function App() {
             accounts={accounts}
             loading={accountsLoading}
             error={accountsError}
+            onRefreshAccounts={loadAccounts}
           />
         )}
         {!authLoading && user && !isTeller && (

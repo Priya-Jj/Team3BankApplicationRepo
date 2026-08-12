@@ -8,7 +8,7 @@
  * shapes match the types in types.ts directly, so there is no translation layer.
  */
 
-import type { Account, TransferRequest, TransferResponse, User } from './types';
+import type { Account, CashTransactionRequest, CashTransactionResponse, TransferRequest, TransferResponse, User } from './types';
 
 export async function getCurrentUser(): Promise<User | null> {
   const response = await fetch('/api/me', {
@@ -77,6 +77,25 @@ export async function postTransfer(
   if (!response.ok) {
     const message = await safeReadErrorMessage(response);
     throw new Error(message || `Transfer failed: ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function postCashTransaction(
+  accountId: string,
+  request: CashTransactionRequest
+): Promise<CashTransactionResponse> {
+  const response = await fetch(`/api/accounts/${accountId}/transactions`, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(request),
+  });
+  if (!response.ok) {
+    const message = await safeReadErrorMessage(response);
+    throw new Error(message || `Cash transaction failed: ${response.status}`);
   }
   return response.json();
 }

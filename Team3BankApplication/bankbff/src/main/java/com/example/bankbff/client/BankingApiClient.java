@@ -1,6 +1,7 @@
 package com.example.bankbff.client;
 
 import com.example.bankbff.dto.AccountDto;
+import com.example.bankbff.dto.CashTransactionRequestDto;
 import com.example.bankbff.dto.TransferRequestDto;
 import com.example.bankbff.dto.TransferResponseDto;
 import org.springframework.core.ParameterizedTypeReference;
@@ -46,5 +47,25 @@ public class BankingApiClient {
                    .retrieve()
                    .bodyToMono(TransferResponseDto.class)
                    .block();
+    }
+
+    public void postCashTransaction(CashTransactionRequestDto request) {
+        // TODO 6.3: POST /api/v1/transactions with the given request body.
+        //
+        bankApiWebClient.post()
+        .uri("/api/v1/transactions")
+                   .bodyValue(request)
+                   .retrieve()
+                   .bodyToMono(Void.class)
+                   .block();
+    }
+
+    public TransferResponseDto postCashTransaction(String accountId, CashTransactionRequestDto request) {
+        return bankApiWebClient.post()
+                .uri("/api/v1/accounts/{id}/transactions", accountId)
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(TransferResponseDto.class)
+                .block();
     }
 }
