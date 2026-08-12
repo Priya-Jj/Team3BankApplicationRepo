@@ -31,6 +31,7 @@ export function App() {
   const [accountsError, setAccountsError] = useState<string | null>(null);
 
   const loadAccounts = useCallback(async () => {
+    if (!user) return;
     setAccountsLoading(true);
     setAccountsError(null);
     try {
@@ -38,10 +39,11 @@ export function App() {
       setAccounts(data);
     } catch (e) {
       setAccountsError(e instanceof Error ? e.message : 'Unknown error');
+      setAccounts([]);
     } finally {
       setAccountsLoading(false);
     }
-  }, []);
+  }, [user]);
 
   // Load accounts once a user becomes available (the auth gate).
   useEffect(() => {
