@@ -55,6 +55,9 @@ class AccountControllerTest {
     private com.example.bankapi.repository.TransactionRepository transactionRepository;
 
     @Mock
+    private com.example.bankapi.service.TransactionStatsPublisher statsPublisher;
+
+    @Mock
     private Jwt jwt;
 
     @BeforeEach
@@ -65,7 +68,8 @@ class AccountControllerTest {
                 downstreamAccountService,
                 transferService,
                 accountRepository,
-                transactionRepository
+                transactionRepository,
+                statsPublisher
         );
     }
 

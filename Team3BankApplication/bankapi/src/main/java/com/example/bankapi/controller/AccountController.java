@@ -8,6 +8,7 @@ import com.example.bankapi.service.AccountService;
 import com.example.bankapi.service.AuditService;
 import com.example.bankapi.service.DownstreamAccountService;
 import com.example.bankapi.service.TransferService;
+import com.example.bankapi.service.TransactionStatsPublisher;
 import com.example.bankapi.entity.Accounts;
 import com.example.bankapi.entity.AccountStatus;
 import com.example.bankapi.entity.TxnType;
@@ -40,15 +41,17 @@ public class AccountController {
     private final TransferService transferService;
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
+    private final TransactionStatsPublisher statsPublisher;
 
     public AccountController(AccountService accountService, AuditService auditService, DownstreamAccountService downstreamAccountService, TransferService transferService, AccountRepository accountRepository,
-            TransactionRepository transactionRepository) {
+            TransactionRepository transactionRepository, TransactionStatsPublisher statsPublisher) {
         this.accountService = accountService;
         this.auditService = auditService;
         this.downstreamAccountService = downstreamAccountService;
         this.transferService = transferService;
          this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
+        this.statsPublisher = statsPublisher;
     }
 
     @GetMapping
@@ -192,7 +195,13 @@ public class AccountController {
         transaction.setTxnDate(java.time.LocalDateTime.now());
         transaction.setDescription("Teller deposit");
         transactionRepository.save(transaction);
-
+        try {
+            statsPublisher.publish("DEPOSIT", request.amount());
+            statsPublisher.publish("BALANCE", currentBalance.add(request.amount()));
+        } catch (Exception e) {
+            // don't block the API if stats publishing fails; just log
+            System.err.println("Failed to publish transaction stats: " + e.getMessage());
+        }
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(Map.of("txnId", transaction.getId(), "status", "COMPLETED"));
     }
@@ -223,15 +232,24 @@ public class AccountController {
         Accounts saved = accountRepository.save(account);
 
         com.example.bankapi.entity.Transaction transaction = new com.example.bankapi.entity.Transaction();
-        String txnId = "D-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase();
+        String txnId = "W-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase();
         transaction.setId(txnId);
         transaction.setAccount(saved);
-        transaction.setTxnType(TxnType.DEPOSIT);
+        transaction.setTxnType(TxnType.WITHDRAWAL);
         transaction.setAmount(request.amount());
         transaction.setStatus(TransactionStatus.COMPLETED);
         transaction.setTxnDate(java.time.LocalDateTime.now());
-        transaction.setDescription("Teller deposit");
+        transaction.setDescription("Teller withdraw");
         transactionRepository.save(transaction);
+
+        // publish transaction statistics to Kafka (same pattern as transfers)
+        try {
+            statsPublisher.publish("WITHDRAWN", request.amount());
+            statsPublisher.publish("BALANCE", currentBalance.subtract(request.amount()));
+        } catch (Exception e) {
+            // don't block the API if stats publishing fails; just log
+            System.err.println("Failed to publish transaction stats: " + e.getMessage());
+        }
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(Map.of("txnId", transaction.getId(), "status", "COMPLETED"));
