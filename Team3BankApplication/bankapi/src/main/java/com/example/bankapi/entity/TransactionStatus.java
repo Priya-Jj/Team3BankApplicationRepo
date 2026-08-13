@@ -1,6 +1,6 @@
 package com.example.bankapi.entity;
 
-public enum TxnStatus {
+public enum TransactionStatus {
     COMPLETED,
     FAILED
 }

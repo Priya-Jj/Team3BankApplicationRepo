@@ -33,7 +33,7 @@ public class Transaction {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 10, nullable = false)
-    private TxnStatus status;
+    private TransactionStatus status;
 
     @Column(name = "txn_date")
     private LocalDateTime txnDate;
@@ -76,11 +76,11 @@ public class Transaction {
         this.amount = amount;
     }
 
-    public TxnStatus getStatus() {
+    public TransactionStatus getStatus() {
         return status;
     }
 
-    public void setStatus(TxnStatus status) {
+    public void setStatus(TransactionStatus status) {
         this.status = status;
     }
 

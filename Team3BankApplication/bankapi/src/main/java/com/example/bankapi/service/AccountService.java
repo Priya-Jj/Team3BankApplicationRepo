@@ -1,7 +1,6 @@
 package com.example.bankapi.service;
 
 import com.example.bankapi.dto.AccountsDto;
-import com.example.bankapi.model.Account;
 import com.example.bankapi.repository.AccountRepository;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,15 +14,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class AccountService {
 
     private final AccountRepository accountRepository;
-    private final Map<String, Account> store = new ConcurrentHashMap<>();
 
     public AccountService(AccountRepository accountRepository) {
         this.accountRepository = accountRepository;
-        store.put("A001", new Account("A001", "C001", "CHECKING", new BigDecimal("1250.00")));
-        store.put("A002", new Account("A002", "C001", "SAVINGS",  new BigDecimal("8400.00")));
-        store.put("A003", new Account("A003", "C002", "CHECKING", new BigDecimal("300.50")));
-        store.put("A004", new Account("A004", "C003", "CHECKING", new BigDecimal("2100.75")));
-        store.put("A005", new Account("A005", "C003", "SAVINGS",  new BigDecimal("15000.00")));
     }
 
     // @PreAuthorize that restricts this to tellers and auditors only.
@@ -69,11 +62,11 @@ public class AccountService {
     //          Combine them with 'and' (or '&&' -- both work in SpEL).
     //          An auditor has account.read but no create scope and no teller role,
     //          so this denies them even though they can read everything.
-    @PreAuthorize("hasAuthority('SCOPE_account.create') and hasRole('TELLER')")
-    public Account create(Account account) {
-        store.put(account.id(), account);
-        return account;
-    }
+//    @PreAuthorize("hasAuthority('SCOPE_account.create') and hasRole('TELLER')")
+//    public Account create(Account account) {
+//        store.put(account.id(), account);
+//        return account;
+//    }
 
     // TODO 16: Add @PreAuthorize that allows the account's owner OR a teller to
     //          update an account. Auditors are NOT allowed to update.
@@ -81,11 +74,11 @@ public class AccountService {
     //                 and (hasRole('TELLER')
     //                      or @accountOwnership.isOwner(#account.id(), authentication))"
     //          You will create the @accountOwnership bean in Task 4.3.
-    @PreAuthorize("hasAuthority('SCOPE_account.write') and (hasRole('TELLER') or @accountOwnership.isOwner(#account.id(), authentication))")
-    public Account update(Account account) {
-        store.put(account.id(), account);
-        return account;
-    }
+//    @PreAuthorize("hasAuthority('SCOPE_account.write') and (hasRole('TELLER') or @accountOwnership.isOwner(#account.id(), authentication))")
+//    public Account update(Account account) {
+//        store.put(account.id(), account);
+//        return account;
+//    }
 
     /**
      * Calls findAll() via 'this' -- which bypasses the AOP proxy.
