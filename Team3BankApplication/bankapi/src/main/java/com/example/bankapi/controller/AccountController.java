@@ -195,7 +195,13 @@ public class AccountController {
         transaction.setTxnDate(java.time.LocalDateTime.now());
         transaction.setDescription("Teller deposit");
         transactionRepository.save(transaction);
-
+        try {
+            statsPublisher.publish("DEPOSIT", request.amount());
+            statsPublisher.publish("BALANCE", currentBalance.add(request.amount()));
+        } catch (Exception e) {
+            // don't block the API if stats publishing fails; just log
+            System.err.println("Failed to publish transaction stats: " + e.getMessage());
+        }
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(Map.of("txnId", transaction.getId(), "status", "COMPLETED"));
     }
@@ -238,8 +244,8 @@ public class AccountController {
 
         // publish transaction statistics to Kafka (same pattern as transfers)
         try {
-            statsPublisher.publish("TRANSFER_OUT", request.amount());
-            statsPublisher.publish("TRANSFER_IN", request.amount());
+            statsPublisher.publish("WITHDRAWN", request.amount());
+            statsPublisher.publish("BALANCE", currentBalance.subtract(request.amount()));
         } catch (Exception e) {
             // don't block the API if stats publishing fails; just log
             System.err.println("Failed to publish transaction stats: " + e.getMessage());
