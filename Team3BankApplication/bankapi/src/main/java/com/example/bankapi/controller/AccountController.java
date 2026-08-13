@@ -1,11 +1,8 @@
 package com.example.bankapi.controller;
 
 import com.example.bankapi.dto.AccountsDto;
-import com.example.bankapi.model.DepositRequest;
-import com.example.bankapi.model.Account;
+import com.example.bankapi.model.*;
 import com.example.bankapi.service.AccountService;
-import com.example.bankapi.model.CashTransactionRequest;
-import com.example.bankapi.model.CashTransactionResponse;
 import com.example.bankapi.service.AuditService;
 import com.example.bankapi.service.DownstreamAccountService;
 import com.example.bankapi.service.TransferService;
@@ -172,6 +169,46 @@ public class AccountController {
             currentBalance = BigDecimal.ZERO;
         }
         account.setBalance(currentBalance.add(request.amount()));
+        Accounts saved = accountRepository.save(account);
+
+        com.example.bankapi.entity.Transaction transaction = new com.example.bankapi.entity.Transaction();
+        String txnId = "D-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase();
+        transaction.setId(txnId);
+        transaction.setAccount(saved);
+        transaction.setTxnType(TxnType.DEPOSIT);
+        transaction.setAmount(request.amount());
+        transaction.setStatus(TxnStatus.COMPLETED);
+        transaction.setTxnDate(java.time.LocalDateTime.now());
+        transaction.setDescription("Teller deposit");
+        transactionRepository.save(transaction);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(Map.of("txnId", transaction.getId(), "status", "COMPLETED"));
+    }
+
+    @PreAuthorize("hasAuthority('SCOPE_account.write') and hasRole('TELLER')")
+    @Transactional
+    @PostMapping("/{accountId}/withdrawals")
+    public ResponseEntity<Map<String, String>> withdraw(
+            @PathVariable Long accountId,
+            @Valid @RequestBody WithdrawalRequest request) {
+        var accountOpt = accountRepository.findById(accountId);
+        if (accountOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("status", "FAILED", "message", "Account not found"));
+        }
+
+        Accounts account = accountOpt.get();
+        if (account.getAccountStatus() != AccountStatus.ACTIVE) {
+            return ResponseEntity.status(422)
+                    .body(Map.of("status", "FAILED", "message", "Account is inactive"));
+        }
+
+        BigDecimal currentBalance = account.getBalance();
+        if (currentBalance == null) {
+            currentBalance = BigDecimal.ZERO;
+        }
+        account.setBalance(currentBalance.subtract(request.amount()));
         Accounts saved = accountRepository.save(account);
 
         com.example.bankapi.entity.Transaction transaction = new com.example.bankapi.entity.Transaction();

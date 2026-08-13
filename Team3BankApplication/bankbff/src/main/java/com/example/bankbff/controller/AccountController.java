@@ -1,11 +1,7 @@
 package com.example.bankbff.controller;
 
 import com.example.bankbff.client.BankingApiClient;
-import com.example.bankbff.dto.AccountDto;
-import com.example.bankbff.dto.DepositRequestDto;
-import com.example.bankbff.dto.CashTransactionRequestDto;
-import com.example.bankbff.dto.TransferRequestDto;
-import com.example.bankbff.dto.TransferResponseDto;
+import com.example.bankbff.dto.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -57,5 +53,11 @@ public class AccountController {
     public Map<String, String> deposit(@PathVariable String accountId, @RequestBody DepositRequestDto request) {
 
         return bankingApiClient.postDeposit(accountId, request);
+    }
+
+    @PostMapping("/accounts/{accountId}/withdrawals")
+    public Map<String, String> withdrawals(@PathVariable String accountId, @RequestBody WithdrawalRequestDto request) {
+
+        return bankingApiClient.postWithdrawal(accountId, request);
     }
 }

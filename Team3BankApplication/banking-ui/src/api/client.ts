@@ -154,6 +154,25 @@ export async function postDeposit(
   return response.json();
 }
 
+export async function postWithdrawls(
+  accountId: string,
+  amount: number
+): Promise<{ txnId?: string; status?: string; message?: string }> {
+  const response = await fetch(`/api/accounts/${accountId}/withdrawals`, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ amount }),
+  });
+  if (!response.ok) {
+    const message = await safeReadErrorMessage(response);
+    throw new Error(message || `Withdraw failed: ${response.status}`);
+  }
+  return response.json();
+}
+
 async function safeReadErrorMessage(response: Response): Promise<string | null> {
   try {
     const body = await response.json();
