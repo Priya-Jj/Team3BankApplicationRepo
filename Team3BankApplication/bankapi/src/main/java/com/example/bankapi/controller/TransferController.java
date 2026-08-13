@@ -1,7 +1,7 @@
 package com.example.bankapi.controller;
 
-import com.example.bankapi.model.TransferRequest;
-import com.example.bankapi.model.TransferResponse;
+import com.example.bankapi.entity.TransferRequest;
+import com.example.bankapi.entity.TransferResponse;
 import com.example.bankapi.service.TransferService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;

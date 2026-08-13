@@ -2,13 +2,14 @@ package com.example.bankapi.controller;
 
 import com.example.bankapi.dto.AccountsDto;
 import com.example.bankapi.model.*;
+import com.example.bankapi.entity.TransactionStatus;
+import com.example.bankapi.model.DepositRequest;
 import com.example.bankapi.service.AccountService;
 import com.example.bankapi.service.AuditService;
 import com.example.bankapi.service.DownstreamAccountService;
 import com.example.bankapi.service.TransferService;
 import com.example.bankapi.entity.Accounts;
 import com.example.bankapi.entity.AccountStatus;
-import com.example.bankapi.entity.TxnStatus;
 import com.example.bankapi.entity.TxnType;
 import com.example.bankapi.repository.AccountRepository;
 import com.example.bankapi.repository.TransactionRepository;
@@ -66,7 +67,7 @@ public class AccountController {
     // Annotate the parameter with @RequestBody.
     // Use ResponseEntity.status(HttpStatus.CREATED).body(account) as the return value.
     @PostMapping
-    public ResponseEntity<Account> create(@RequestBody Account account) {
+    public ResponseEntity<AccountsDto> create(@RequestBody AccountsDto account) {
         return ResponseEntity.status(HttpStatus.CREATED).body(account);
     }
 
@@ -106,53 +107,63 @@ public class AccountController {
 // Read jwt.getSubject() and jwt.getClaimAsStringList("roles").
 // Filter ACCOUNTS by customerId for account holders.
 // Return the full list for tellers.
-    @GetMapping("/mine")
-    public List<Account> getMyAccounts(@AuthenticationPrincipal Jwt jwt) {
-        // TODO 11: Read the caller's subject (customer_number or staff username)
-        //          and roles list. If "teller" is in the roles, return
-        //          ACCOUNTS in full. Otherwise filter to accounts where
-        //          customerId equals the subject.
-
-        String sub =jwt.getSubject();
-        List<String> roles = jwt.getClaimAsStringList("roles");
-        assert roles != null;
-        if (roles.stream().anyMatch(role -> role.equals("teller"))) {
-            return transferService.listAccounts();
-        }
-        else  {
-            return transferService.listAccounts().stream().filter(account -> account.customerId().equals(sub)).collect(Collectors.toList());
-        }
-    }
+//    @GetMapping("/mine")
+//    public List<AccountsDto> getMyAccounts(@AuthenticationPrincipal Jwt jwt) {
+//        // TODO 11: Read the caller's subject (customer_number or staff username)
+//        //          and roles list. If "teller" is in the roles, return
+//        //          ACCOUNTS in full. Otherwise filter to accounts where
+//        //          customerId equals the subject.
+//
+//        String sub =jwt.getSubject();
+//        List<String> roles = jwt.getClaimAsStringList("roles");
+//        assert roles != null;
+//        if (roles.stream().anyMatch(role -> role.equals("teller"))) {
+//            return transferService.listAccounts();
+//        }
+//        else  {
+//            return transferService.listAccounts().stream().filter(account -> account.customerId().equals(sub)).collect(Collectors.toList());
+//        }
+//    }
 
     // TODO 24: Add this endpoint to AccountController.
 // It is protected and requires an authenticated caller.
 // The inbound request uses the caller's token.
 // The outbound call to the downstream service uses the service's own token.
     @GetMapping("/downstream")
-    public List<Account> getFromDownstream() {
+    public List<AccountsDto> getFromDownstream() {
         // TODO: call downstreamAccountService.fetchAllFromDownstream() and return the result
         return downstreamAccountService.fetchAllFromDownstream();
     }
 
-    @PreAuthorize("hasAuthority('SCOPE_account.write') and hasRole('TELLER')")
-    @PostMapping("/{id}/transactions")
-    public ResponseEntity<CashTransactionResponse> recordCashTransaction(
-            @PathVariable String id,
-            @Valid @RequestBody CashTransactionRequest request) {
-        CashTransactionResponse response = transferService.recordCashTransaction(id, request.transactionType(), request.amount());
-        if (response.status() == com.example.bankapi.model.TransactionStatus.COMPLETE) {
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-    }
+//    @PreAuthorize("hasAuthority('SCOPE_account.write') and hasRole('TELLER')")
+//    @PostMapping("/{id}/transactions")
+//    public ResponseEntity<CashTransactionResponse> recordCashTransaction(
+//            @PathVariable String id,
+//            @Valid @RequestBody CashTransactionRequest request) {
+//        CashTransactionResponse response = transferService.recordCashTransaction(id, request.transactionType(), request.amount());
+//        if (response.status() == TransactionStatus.COMPLETED) {
+//            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+//        }
+//        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+//    }
 
     @PreAuthorize("hasAuthority('SCOPE_account.write') and hasRole('TELLER')")
     @Transactional
     @PostMapping("/{accountId}/deposits")
     public ResponseEntity<Map<String, String>> deposit(
-            @PathVariable Long accountId,
+            @PathVariable String accountId,
             @Valid @RequestBody DepositRequest request) {
-        var accountOpt = accountRepository.findById(accountId);
+        // Support both numeric DB id and accountNumber string
+        var accountOpt = java.util.Optional.<Accounts>empty();
+        try {
+            // try numeric id
+            Long id = Long.parseLong(accountId);
+            accountOpt = accountRepository.findById(id);
+        } catch (NumberFormatException ex) {
+            // not numeric, try account number
+            accountOpt = accountRepository.findByAccountNumber(accountId);
+        }
+
         if (accountOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("status", "FAILED", "message", "Account not found"));
@@ -177,7 +188,7 @@ public class AccountController {
         transaction.setAccount(saved);
         transaction.setTxnType(TxnType.DEPOSIT);
         transaction.setAmount(request.amount());
-        transaction.setStatus(TxnStatus.COMPLETED);
+        transaction.setStatus(TransactionStatus.COMPLETED);
         transaction.setTxnDate(java.time.LocalDateTime.now());
         transaction.setDescription("Teller deposit");
         transactionRepository.save(transaction);

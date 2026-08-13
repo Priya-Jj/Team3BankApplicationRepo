@@ -1,6 +1,6 @@
 package com.example.bankapi.service;
 
-import com.example.bankapi.model.TransactionStat;
+import com.example.bankapi.entity.TransactionStat;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
