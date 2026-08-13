@@ -1,5 +1,6 @@
 package com.example.bankapi.controller;
 
+import com.example.bankapi.dto.AccountAuditDto;
 import com.example.bankapi.dto.AccountsDto;
 import com.example.bankapi.model.*;
 import com.example.bankapi.entity.TransactionStatus;
@@ -57,6 +58,11 @@ public class AccountController {
     @GetMapping
     public List<AccountsDto> getAll() {
         return accountService.findAll();
+    }
+
+    @GetMapping("/audits")
+    public List<AccountAuditDto> getAudits() {
+        return auditService.findAll();
     }
 
     @GetMapping("/{customerNumber}")
