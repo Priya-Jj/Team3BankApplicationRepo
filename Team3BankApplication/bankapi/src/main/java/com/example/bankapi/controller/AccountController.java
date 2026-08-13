@@ -167,11 +167,16 @@ public class AccountController {
                     .body(Map.of("status", "FAILED", "message", "Account is inactive"));
         }
 
-        account.setBalance(account.getBalance().add(request.amount()));
+        BigDecimal currentBalance = account.getBalance();
+        if (currentBalance == null) {
+            currentBalance = BigDecimal.ZERO;
+        }
+        account.setBalance(currentBalance.add(request.amount()));
         Accounts saved = accountRepository.save(account);
 
         com.example.bankapi.entity.Transaction transaction = new com.example.bankapi.entity.Transaction();
-        transaction.setId("D-" + java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        String txnId = "D-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase();
+        transaction.setId(txnId);
         transaction.setAccount(saved);
         transaction.setTxnType(TxnType.DEPOSIT);
         transaction.setAmount(request.amount());

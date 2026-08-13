@@ -81,6 +81,7 @@ public class BankingApiClient {
     }
 
      public java.util.Map<String, String> postDeposit(String accountId, DepositRequestDto request) {
+        System.out.println("Posting deposit for accountId: " + accountId + ", amount: " + request.amount());
         return bankApiWebClient.post()
                 .uri("/api/v1/accounts/{id}/deposits", accountId)
                 .bodyValue(request)
