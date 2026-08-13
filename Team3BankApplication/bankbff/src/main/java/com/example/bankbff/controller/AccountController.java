@@ -60,4 +60,9 @@ public class AccountController {
 
         return bankingApiClient.postWithdrawal(accountId, request);
     }
+
+    @PutMapping("/accounts/{accountId}/status")
+    public AccountDto updateStatus(@PathVariable String accountId, @RequestBody com.example.bankbff.dto.StatusUpdateRequestDto request) {
+        return bankingApiClient.putAccountStatus(accountId, request);
+    }
 }

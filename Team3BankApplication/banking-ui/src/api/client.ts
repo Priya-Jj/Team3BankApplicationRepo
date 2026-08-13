@@ -184,3 +184,22 @@ async function safeReadErrorMessage(response: Response): Promise<string | null> 
     return null;
   }
 }
+
+export async function putAccountStatus(
+  accountId: string,
+  status: 'ACTIVE' | 'INACTIVE'
+): Promise<any> {
+  const response = await fetch(`/api/accounts/${accountId}/status`, {
+    method: 'PUT',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ status }),
+  });
+  if (!response.ok) {
+    const message = await safeReadErrorMessage(response);
+    throw new Error(message || `Update status failed: ${response.status}`);
+  }
+  return response.json();
+}
