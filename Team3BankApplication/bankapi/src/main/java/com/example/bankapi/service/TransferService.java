@@ -49,8 +49,13 @@ public class TransferService {
             Accounts from = accountRepository.findById(Long.valueOf(fromAccountId)).orElse(null);
             Accounts to   = accountRepository.findById(Long.valueOf(toAccountId)).orElse(null);
 
+            assert from != null;
+            assert to != null;
             from.setBalance(from.getBalance().subtract(request.amount()));
             to.setBalance(to.getBalance().add(request.amount()));
+
+            accountRepository.save(from);
+            accountRepository.save(to);
 
 //            if (!"ACTIVE".equalsIgnoreCase(from.status()) || !"ACTIVE".equalsIgnoreCase(to.status())) {
 //                return new TransferResponse(null, TransactionStatus.FAILED);
