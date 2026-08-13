@@ -2,6 +2,7 @@ package com.example.bankbff.client;
 
 import com.example.bankbff.dto.AccountDto;
 import com.example.bankbff.dto.CashTransactionRequestDto;
+import com.example.bankbff.dto.DepositRequestDto;
 import com.example.bankbff.dto.TransferRequestDto;
 import com.example.bankbff.dto.TransferResponseDto;
 import org.springframework.core.ParameterizedTypeReference;
@@ -49,26 +50,21 @@ public class BankingApiClient {
     }
 
     public TransferResponseDto postTransfer(TransferRequestDto request) {
-        // TODO 6.2: POST /api/v1/transfers with the given request body and
-        // return the response as a TransferResponseDto.
-        //
         return bankApiWebClient.post()
-        .uri("/api/v1/transfers")
-                   .bodyValue(request)
-                   .retrieve()
-                   .bodyToMono(TransferResponseDto.class)
-                   .block();
+                .uri("/api/v1/transfers")
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(TransferResponseDto.class)
+                .block();
     }
 
     public void postCashTransaction(CashTransactionRequestDto request) {
-        // TODO 6.3: POST /api/v1/transactions with the given request body.
-        //
         bankApiWebClient.post()
-        .uri("/api/v1/transactions")
-                   .bodyValue(request)
-                   .retrieve()
-                   .bodyToMono(Void.class)
-                   .block();
+                .uri("/api/v1/transactions")
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(Void.class)
+                .block();
     }
 
     public TransferResponseDto postCashTransaction(String accountId, CashTransactionRequestDto request) {
@@ -77,6 +73,15 @@ public class BankingApiClient {
                 .bodyValue(request)
                 .retrieve()
                 .bodyToMono(TransferResponseDto.class)
+                .block();
+    }
+
+    public java.util.Map<String, String> postDeposit(String accountId, DepositRequestDto request) {
+        return bankApiWebClient.post()
+                .uri("/api/v1/accounts/{id}/deposits", accountId)
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<java.util.Map<String, String>>() {})
                 .block();
     }
 }
