@@ -2,7 +2,7 @@ package com.example.bankapi.repository;
 
 import com.example.bankapi.entity.Accounts;
 import com.example.bankapi.entity.Transaction;
-import com.example.bankapi.entity.TxnStatus;
+import com.example.bankapi.entity.TransactionStatus;
 import com.example.bankapi.entity.TxnType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,7 +12,6 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, String> {
@@ -35,17 +34,17 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
     /**
      * Find all transactions with a specific status (COMPLETED or FAILED).
      */
-    List<Transaction> findByStatus(TxnStatus status);
+    List<Transaction> findByStatus(TransactionStatus status);
 
     /**
      * Find all completed transactions for a specific account.
      */
-    List<Transaction> findByAccountAndStatus(Accounts account, TxnStatus status);
+    List<Transaction> findByAccountAndStatus(Accounts account, TransactionStatus status);
 
     /**
      * Find transactions by account ID and status.
      */
-    List<Transaction> findByAccountIdAndStatus(Long accountId, TxnStatus status);
+    List<Transaction> findByAccountIdAndStatus(Long accountId, TransactionStatus status);
 
     /**
      * Find all transactions within a date range.
@@ -62,7 +61,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
     /**
      * Find all failed transactions.
      */
-    List<Transaction> findByStatusOrderByTxnDateDesc(TxnStatus status);
+    List<Transaction> findByStatusOrderByTxnDateDesc(TransactionStatus status);
 
     /**
      * Custom query to calculate total transaction amount for an account.
@@ -73,7 +72,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
     /**
      * Find all transactions of a specific type and status.
      */
-    List<Transaction> findByTxnTypeAndStatus(TxnType txnType, TxnStatus status);
+    List<Transaction> findByTxnTypeAndStatus(TxnType txnType, TransactionStatus status);
 
     /**
      * Count completed transactions for an account.

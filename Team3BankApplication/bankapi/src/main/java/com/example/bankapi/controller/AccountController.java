@@ -1,20 +1,16 @@
 package com.example.bankapi.controller;
 
 import com.example.bankapi.dto.AccountsDto;
-import com.example.bankapi.model.Account;
 import com.example.bankapi.service.AccountService;
 import com.example.bankapi.service.AuditService;
 import com.example.bankapi.service.DownstreamAccountService;
 import com.example.bankapi.service.TransferService;
-import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
-import javax.security.auth.Subject;
-import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +48,7 @@ public class AccountController {
     // Annotate the parameter with @RequestBody.
     // Use ResponseEntity.status(HttpStatus.CREATED).body(account) as the return value.
     @PostMapping
-    public ResponseEntity<Account> create(@RequestBody Account account) {
+    public ResponseEntity<AccountsDto> create(@RequestBody AccountsDto account) {
         return ResponseEntity.status(HttpStatus.CREATED).body(account);
     }
 
@@ -92,31 +88,31 @@ public class AccountController {
 // Read jwt.getSubject() and jwt.getClaimAsStringList("roles").
 // Filter ACCOUNTS by customerId for account holders.
 // Return the full list for tellers.
-    @GetMapping("/mine")
-    public List<Account> getMyAccounts(@AuthenticationPrincipal Jwt jwt) {
-        // TODO 11: Read the caller's subject (customer_number or staff username)
-        //          and roles list. If "teller" is in the roles, return
-        //          ACCOUNTS in full. Otherwise filter to accounts where
-        //          customerId equals the subject.
-
-        String sub =jwt.getSubject();
-        List<String> roles = jwt.getClaimAsStringList("roles");
-        assert roles != null;
-        if (roles.stream().anyMatch(role -> role.equals("teller"))) {
-            return transferService.listAccounts();
-        }
-        else  {
-            return transferService.listAccounts().stream().filter(account -> account.customerId().equals(sub)).collect(Collectors.toList());
-        }
-    }
+//    @GetMapping("/mine")
+//    public List<AccountsDto> getMyAccounts(@AuthenticationPrincipal Jwt jwt) {
+//        // TODO 11: Read the caller's subject (customer_number or staff username)
+//        //          and roles list. If "teller" is in the roles, return
+//        //          ACCOUNTS in full. Otherwise filter to accounts where
+//        //          customerId equals the subject.
+//
+//        String sub =jwt.getSubject();
+//        List<String> roles = jwt.getClaimAsStringList("roles");
+//        assert roles != null;
+//        if (roles.stream().anyMatch(role -> role.equals("teller"))) {
+//            return transferService.listAccounts();
+//        }
+//        else  {
+//            return transferService.listAccounts().stream().filter(account -> account.customerId().equals(sub)).collect(Collectors.toList());
+//        }
+//    }
 
     // TODO 24: Add this endpoint to AccountController.
 // It is protected and requires an authenticated caller.
 // The inbound request uses the caller's token.
 // The outbound call to the downstream service uses the service's own token.
-    @GetMapping("/downstream")
-    public List<Account> getFromDownstream() {
-        // TODO: call downstreamAccountService.fetchAllFromDownstream() and return the result
-        return downstreamAccountService.fetchAllFromDownstream();
-    }
+//    @GetMapping("/downstream")
+//    public List<AccountsDto> getFromDownstream() {
+//        // TODO: call downstreamAccountService.fetchAllFromDownstream() and return the result
+//        return downstreamAccountService.fetchAllFromDownstream();
+//    }
 }

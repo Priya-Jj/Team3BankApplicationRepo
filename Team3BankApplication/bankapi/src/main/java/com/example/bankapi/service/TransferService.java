@@ -1,9 +1,8 @@
 package com.example.bankapi.service;
 
-import com.example.bankapi.model.Account;
-import com.example.bankapi.model.TransactionStatus;
-import com.example.bankapi.model.TransferRequest;
-import com.example.bankapi.model.TransferResponse;
+import com.example.bankapi.entity.*;
+import com.example.bankapi.repository.AccountRepository;
+import com.example.bankapi.repository.TransferRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -23,64 +22,43 @@ import java.util.concurrent.locks.ReentrantLock;
 @Service
 public class TransferService {
     private final TransactionStatsPublisher statsPublisher;
+    private final TransferRepository transferRepository;
+    private final AccountRepository accountRepository;
 
     // Same account IDs as AccountController's static list, but kept here
     // mutably so transfers can change balances. The two lists drift; in
     // a real app there would be a single source of truth (the database).
-    private final List<Account> accounts = new ArrayList<>(List.of(
-            new Account("A001", "487-978493", "CHECKING", new BigDecimal("1250.00"), "ACTIVE"),
-            new Account("A002", "487-978493", "SAVINGS",  new BigDecimal("8400.00"), "ACTIVE"),
-            new Account("A003", "487-978494", "CHECKING", new BigDecimal("300.50"), "ACTIVE"),
-            new Account("A004", "487-978495", "CHECKING", new BigDecimal("2100.75"), "ACTIVE"),
-            new Account("A005", "487-978495", "SAVINGS",  new BigDecimal("15000.00"), "INACTIVE")
-    ));
-
     private final ReentrantLock lock = new ReentrantLock();
 
-    public TransferService(TransactionStatsPublisher statsPublisher) {
+    public TransferService(TransactionStatsPublisher statsPublisher, TransferRepository transferRepository, AccountRepository accountRepository) {
         this.statsPublisher = statsPublisher;
-    }
-
-    public List<Account> listAccounts() {
-        lock.lock();
-        try {
-            return List.copyOf(accounts);
-        } finally {
-            lock.unlock();
-        }
+        this.transferRepository = transferRepository;
+        this.accountRepository = accountRepository;
     }
 
     public TransferResponse transfer(TransferRequest request) {
         lock.lock();
         try {
-            int fromIndex = indexOf(request.fromAccountId());
-            int toIndex   = indexOf(request.toAccountId());
+            String fromAccountId = request.fromAccountId();
+            String toAccountId   = request.toAccountId();
 
-            if (fromIndex == -1 || toIndex == -1) {
+            if (fromAccountId == null || toAccountId == null || fromAccountId.equals(toAccountId)) {
                 return new TransferResponse(null, TransactionStatus.FAILED);
             }
 
-            Account from = accounts.get(fromIndex);
-            Account to   = accounts.get(toIndex);
+            Accounts from = accountRepository.findById(Long.valueOf(fromAccountId)).orElse(null);
+            Accounts to   = accountRepository.findById(Long.valueOf(toAccountId)).orElse(null);
 
-            if (!from.customerId().equals(to.customerId())) {
-                return new TransferResponse(null, TransactionStatus.FAILED);
-            }
+            from.setBalance(from.getBalance().subtract(request.amount()));
+            to.setBalance(to.getBalance().add(request.amount()));
 
-            if (!"ACTIVE".equalsIgnoreCase(from.status()) || !"ACTIVE".equalsIgnoreCase(to.status())) {
-                return new TransferResponse(null, TransactionStatus.FAILED);
-            }
+//            if (!"ACTIVE".equalsIgnoreCase(from.status()) || !"ACTIVE".equalsIgnoreCase(to.status())) {
+//                return new TransferResponse(null, TransactionStatus.FAILED);
+//            }
 
-            if (request.amount().compareTo(from.balance()) > 0) {
-                return new TransferResponse(null, TransactionStatus.FAILED);
-            }
-
-            accounts.set(fromIndex, new Account(
-                    from.id(), from.customerId(), from.accountType(),
-                    from.balance().subtract(request.amount()), from.status()));
-            accounts.set(toIndex, new Account(
-                    to.id(), to.customerId(), to.accountType(),
-                    to.balance().add(request.amount()), to.status()));
+//            if (request.amount().compareTo(from.balance()) > 0) {
+//                return new TransferResponse(null, TransactionStatus.FAILED);
+//            }
 
             // Publish anonymized statistics for each leg of the internal transfer.
             try {
@@ -92,18 +70,9 @@ public class TransferService {
             }
 
             String txnId = "T-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-            return new TransferResponse(txnId, TransactionStatus.COMPLETE);
+            return new TransferResponse(txnId, TransactionStatus.COMPLETED);
         } finally {
             lock.unlock();
         }
-    }
-
-    private int indexOf(String accountId) {
-        for (int i = 0; i < accounts.size(); i++) {
-            if (accounts.get(i).id().equals(accountId)) {
-                return i;
-            }
-        }
-        return -1;
     }
 }

@@ -1,7 +1,8 @@
-package com.example.bankapi.model;
+package com.example.bankapi.entity;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
+
 import java.math.BigDecimal;
 
 public record TransferRequest(

@@ -1,4 +1,4 @@
-package com.example.bankapi.model;
+package com.example.bankapi.entity;
 
 public record TransferResponse(
         String transactionId,

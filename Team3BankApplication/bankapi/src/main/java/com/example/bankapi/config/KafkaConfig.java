@@ -1,6 +1,6 @@
 package com.example.bankapi.config;
 
-import com.example.bankapi.model.TransactionStat;
+import com.example.bankapi.entity.TransactionStat;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
