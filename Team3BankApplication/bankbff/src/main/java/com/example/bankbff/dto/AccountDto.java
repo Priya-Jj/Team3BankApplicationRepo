@@ -8,9 +8,10 @@ import java.math.BigDecimal;
  * Field names match the JSON exactly: id, customerId, accountType, balance, status.
  */
 public record AccountDto(
-        String id,
+        String accountId,
+        String accountNumber,
         String customerId,
         String accountType,
         BigDecimal balance,
-        String status
+        String accountStatus
 ) {}

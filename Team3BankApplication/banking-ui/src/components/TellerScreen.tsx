@@ -159,7 +159,7 @@ export function TellerScreen({ accounts, loading, error, onRefreshAccounts }: Te
           <table>
             <thead>
               <tr>
-                <th>Account</th>
+                <th>Account ID</th>
                 <th>Customer</th>
                 <th>Type</th>
                 <th>Status</th>

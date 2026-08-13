@@ -13,11 +13,22 @@ import type { Account, CashTransactionRequest, CashTransactionResponse, Transfer
 function normalizeAccount(a: unknown): Account {
   const obj = a as Record<string, unknown>;
   return {
-    id: (obj['accountid'] as string) ?? (obj['id'] as string) ?? '',
-    customerId: (obj['customerId'] as string) ?? (obj['customerID'] as string) ?? (obj['customerid'] as string) ?? '',
+    id:
+      (obj['accountId'] as string) ??
+      (obj['accountid'] as string) ??
+      (obj['id'] as string) ??
+      '',
+    customerId:
+      (obj['customerId'] as string) ??
+      (obj['customerID'] as string) ??
+      (obj['customerid'] as string) ??
+      '',
     accountType: obj['accountType'] as Account['accountType'],
     balance: obj['balance'] as number,
-    status: obj['status'] as Account['status'],
+    status:
+      (obj['accountStatus'] as Account['status']) ??
+      (obj['accountstatus'] as Account['status']) ??
+      (obj['status'] as Account['status']),
   };
 }
 

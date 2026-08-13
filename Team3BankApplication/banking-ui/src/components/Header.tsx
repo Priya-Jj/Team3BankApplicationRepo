@@ -8,7 +8,7 @@
 import { useAuth } from '../auth/AuthContext';
 
 export function Header() {
-  const { user, refresh } = useAuth();
+  const { user } = useAuth();
 
   async function handleSignOut() {
     window.location.href = '/logout';
@@ -29,7 +29,7 @@ export function Header() {
       <div className="header-content">
         <div>
           <h1>Team 3's Bank</h1>
-          <p className="tagline">Online Banking</p>
+          <p className="tagline">Trusted banking for modern customers</p>
         </div>
         {user && (
           <div className="header-user">
