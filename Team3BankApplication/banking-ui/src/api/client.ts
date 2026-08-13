@@ -135,6 +135,25 @@ export async function postCashTransaction(
   return response.json();
 }
 
+export async function postDeposit(
+  accountId: string,
+  amount: number
+): Promise<{ txnId?: string; status?: string; message?: string }> {
+  const response = await fetch(`/api/accounts/${accountId}/deposits`, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ amount }),
+  });
+  if (!response.ok) {
+    const message = await safeReadErrorMessage(response);
+    throw new Error(message || `Deposit failed: ${response.status}`);
+  }
+  return response.json();
+}
+
 async function safeReadErrorMessage(response: Response): Promise<string | null> {
   try {
     const body = await response.json();

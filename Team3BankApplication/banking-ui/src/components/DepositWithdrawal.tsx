@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { postCashTransaction } from '../api/client';
+import { postCashTransaction, postDeposit, getCurrentUser } from '../api/client';
 import { TransactionHistory } from './TransactionHistory';
 import type { Account, CashTransactionRecord, CashTransactionType } from '../api/types';
 import { formatCurrency } from '../utils/format';
@@ -19,6 +19,7 @@ export function DepositWithdrawal({ accounts, onRefreshAccounts }: DepositWithdr
   const [message, setMessage] = useState<string | null>(null);
   const [messageType, setMessageType] = useState<'success' | 'error' | null>(null);
   const [transactions, setTransactions] = useState<CashTransactionRecord[]>([]);
+  const [isTeller, setIsTeller] = useState(false);
 
   const customerIds = useMemo(() => {
     return Array.from(new Set(accounts.map((account) => account.customerId))).sort();
@@ -34,6 +35,20 @@ export function DepositWithdrawal({ accounts, onRefreshAccounts }: DepositWithdr
       setSelectedCustomerId(customerIds[0]);
     }
   }, [customerIds, selectedCustomerId]);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const user = await getCurrentUser();
+        if (!mounted) return;
+        setIsTeller(!!(user && Array.isArray(user.roles) && user.roles.includes('teller')));
+      } catch {
+        // ignore
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
 
   async function handleTransactionSubmit(e: FormEvent) {
     e.preventDefault();
@@ -68,22 +83,22 @@ export function DepositWithdrawal({ accounts, onRefreshAccounts }: DepositWithdr
 
     setSubmitting(true);
     try {
-      const result = await postCashTransaction(fromAccount, {
-        transactionType,
-        amount: amountNumber,
-      });
+      if (transactionType === 'DEPOSIT') {
+        if (!isTeller) {
+          setMessage('Deposits are allowed for tellers only.');
+          setMessageType('error');
+          setSubmitting(false);
+          return;
+        }
 
-      if (result.status === 'FAILED') {
-        setMessage('Transaction failed. Please try again.');
-        setMessageType('error');
-      } else {
-        setMessage(`Transaction successful. Transaction ID: ${result.transactionId}`);
+        const result = await postDeposit(fromAccount, amountNumber);
+        setMessage(`Transaction successful. Transaction ID: ${result.txnId}`);
         setMessageType('success');
         setFromAccount('');
         setAmount('');
         setTransactionType('DEPOSIT');
         const newRecord = {
-          id: result.transactionId,
+          id: result.txnId ?? '',
           accountId: fromAccount,
           customerId: selectedCustomerId,
           type: transactionType,
@@ -92,9 +107,39 @@ export function DepositWithdrawal({ accounts, onRefreshAccounts }: DepositWithdr
         } as CashTransactionRecord;
         setTransactions((prev) => [newRecord, ...prev].slice(0, 8));
         await onRefreshAccounts?.();
+      } else {
+        const result = await postCashTransaction(fromAccount, {
+          transactionType,
+          amount: amountNumber,
+        });
+
+        if (result.status === 'FAILED') {
+          setMessage('Transaction failed. Please try again.');
+          setMessageType('error');
+        } else {
+          setMessage(`Transaction successful. Transaction ID: ${result.transactionId}`);
+          setMessageType('success');
+          setFromAccount('');
+          setAmount('');
+          setTransactionType('DEPOSIT');
+          const newRecord = {
+            id: result.transactionId,
+            accountId: fromAccount,
+            customerId: selectedCustomerId,
+            type: transactionType,
+            amount: amountNumber,
+            timestamp: new Date().toLocaleString(),
+          } as CashTransactionRecord;
+          setTransactions((prev) => [newRecord, ...prev].slice(0, 8));
+          await onRefreshAccounts?.();
+        }
       }
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : 'Transaction failed.');
+      if (e instanceof Error && (e.message.includes('403') || /forbidden/i.test(e.message))) {
+        setMessage('You are not authorized to perform deposits (teller only).');
+      } else {
+        setMessage(e instanceof Error ? e.message : 'Transaction failed.');
+      }
       setMessageType('error');
     } finally {
       setSubmitting(false);
@@ -111,32 +156,32 @@ export function DepositWithdrawal({ accounts, onRefreshAccounts }: DepositWithdr
 
   return (
     <section className="transfer-form customer-transaction">
-      <div className="section-header">
-        <h2>Deposit / Withdrawal</h2>
-      </div>
-      <p>Select a customer and perform deposit or withdrawal transactions on their accounts.</p>
+        <div className="section-header">
+          <h2>Deposit / Withdrawal</h2>
+        </div>
+        <p>Select a customer and perform deposit or withdrawal transactions on their accounts.</p>
 
-      <div className="form-row">
-        <label htmlFor="dw-customer-select">Customer</label>
-        <select
-          id="dw-customer-select"
-          value={selectedCustomerId}
-          onChange={(e) => {
-            setSelectedCustomerId(e.target.value);
-            setFromAccount('');
-            setAmount('');
-            setMessage(null);
-            setMessageType(null);
-          }}
-        >
-          <option value="">-- Select customer --</option>
-          {customerIds.map((customerId) => (
-            <option key={customerId} value={customerId}>
-              {customerId}
-            </option>
-          ))}
-        </select>
-      </div>
+        <div className="form-row">
+    <label htmlFor="dw-customer-select">Customer</label>
+    <select
+      id="dw-customer-select"
+      value={selectedCustomerId}
+      onChange={(e) => {
+        setSelectedCustomerId(e.target.value);
+        setFromAccount('');
+        setAmount('');
+        setMessage(null);
+        setMessageType(null);
+      }}
+    >
+      <option value="">-- Select customer --</option>
+      {customerIds.map((customerId) => (
+        <option key={customerId} value={customerId}>
+          {customerId}
+        </option>
+      ))}
+    </select>
+  </div>
 
       {!selectedCustomerId ? (
         <p className="status-message">Choose a customer to begin.</p>
@@ -178,7 +223,6 @@ export function DepositWithdrawal({ accounts, onRefreshAccounts }: DepositWithdr
           {message && <p className={messageType === 'success' ? 'success-message' : 'error-message'}>{message}</p>}
         </form>
       )}
-
     </section>
   );
 }
