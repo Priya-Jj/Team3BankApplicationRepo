@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { postCashTransaction, postDeposit, getCurrentUser } from '../api/client';
+import { postCashTransaction, postDeposit, getCurrentUser, postWithdrawls } from '../api/client';
 import { TransactionHistory } from './TransactionHistory';
 import type { Account, CashTransactionRecord, CashTransactionType } from '../api/types';
 import { formatCurrency } from '../utils/format';
@@ -108,22 +108,19 @@ export function DepositWithdrawal({ accounts, onRefreshAccounts }: DepositWithdr
         setTransactions((prev) => [newRecord, ...prev].slice(0, 8));
         await onRefreshAccounts?.();
       } else {
-        const result = await postCashTransaction(fromAccount, {
-          transactionType,
-          amount: amountNumber,
-        });
+        const result = await postWithdrawls(fromAccount, amountNumber);
 
         if (result.status === 'FAILED') {
           setMessage('Transaction failed. Please try again.');
           setMessageType('error');
         } else {
-          setMessage(`Transaction successful. Transaction ID: ${result.transactionId}`);
+          setMessage(`Transaction successful. Transaction ID: ${result.txnId}`);
           setMessageType('success');
           setFromAccount('');
           setAmount('');
           setTransactionType('DEPOSIT');
           const newRecord = {
-            id: result.transactionId,
+            id: result.txnId,
             accountId: fromAccount,
             customerId: selectedCustomerId,
             type: transactionType,

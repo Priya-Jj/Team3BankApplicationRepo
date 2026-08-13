@@ -1,13 +1,10 @@
 package com.example.bankbff.client;
 
-import com.example.bankbff.dto.AccountDto;
-import com.example.bankbff.dto.CashTransactionRequestDto;
-import com.example.bankbff.dto.TransferRequestDto;
-import com.example.bankbff.dto.TransferResponseDto;
+import com.example.bankbff.dto.*;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
-import com.example.bankbff.dto.DepositRequestDto;
+
 import java.util.List;
 
 /**
@@ -84,6 +81,15 @@ public class BankingApiClient {
         System.out.println("Posting deposit for accountId: " + accountId + ", amount: " + request.amount());
         return bankApiWebClient.post()
                 .uri("/api/v1/accounts/{id}/deposits", accountId)
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<java.util.Map<String, String>>() {})
+                .block();
+    }
+
+    public java.util.Map<String, String> postWithdrawal(String accountId, WithdrawalRequestDto request) {
+        return bankApiWebClient.post()
+                .uri("/api/v1/accounts/{id}/withdrawals", accountId)
                 .bodyValue(request)
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<java.util.Map<String, String>>() {})
