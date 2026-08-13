@@ -51,6 +51,11 @@ public class TransferService {
 
             assert from != null;
             assert to != null;
+
+            if (request.amount().compareTo(from.getBalance()) > 0) {
+                return new TransferResponse(null, TransactionStatus.FAILED);
+            }
+
             from.setBalance(from.getBalance().subtract(request.amount()));
             to.setBalance(to.getBalance().add(request.amount()));
 
