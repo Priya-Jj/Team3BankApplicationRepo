@@ -1,4 +1,4 @@
-package com.example.bankapi.dto;
+package com.example.bankbff.dto;
 
 import org.springframework.cglib.core.Local;
 

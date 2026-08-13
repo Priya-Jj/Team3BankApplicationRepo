@@ -30,6 +30,9 @@ public class AccountAudit {
     @Column(name = "changed_at")
     private LocalDateTime changedAt;
 
+    @Column(name = "action_type")
+    private String auditType;
+
     public AccountAudit() {
     }
 
@@ -71,6 +74,14 @@ public class AccountAudit {
 
     public void setChangedAt(LocalDateTime changedAt) {
         this.changedAt = changedAt;
+    }
+
+    public String getAuditType() {
+        return auditType;
+    }
+
+    public void setAuditType(String auditType) {
+        this.auditType = auditType;
     }
 }
 

@@ -33,6 +33,11 @@ public class AccountController {
         return bankingApiClient.getAccounts();
     }
 
+    @GetMapping("/audits")
+    public List<AccountAuditDto> audits() {
+        return bankingApiClient.getAudits();
+    }
+
     @GetMapping("/accounts/{customerNumber}")
     public List<AccountDto> accounts(@PathVariable String customerNumber) {
         return bankingApiClient.getAccountsByCustomerNumber(customerNumber);

@@ -13,6 +13,12 @@ import java.util.List;
 public interface AccountAuditRepository extends JpaRepository<AccountAudit, Long> {
 
     /**
+     * Find all audit records in the table, ordered by change date descending.
+     */
+    @Query("SELECT a FROM AccountAudit a ORDER BY a.changedAt DESC")
+    List<AccountAudit> findAllAudits();
+
+    /**
      * Find all audit records for a specific account, ordered by change date descending.
      */
     List<AccountAudit> findByAccountIdOrderByChangedAtDesc(Long accountId);
