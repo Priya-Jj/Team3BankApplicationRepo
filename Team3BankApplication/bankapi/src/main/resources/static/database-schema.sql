@@ -60,3 +60,31 @@ CREATE TABLE account_audit (
                                new_balance   NUMBER(15,2),
                                changed_at    TIMESTAMP      DEFAULT SYSTIMESTAMP NOT NULL
 );
+
+CREATE TABLE transaction_audit (
+                                   audit_id        NUMBER GENERATED AS IDENTITY PRIMARY KEY,
+                                   account_id      NUMBER          NOT NULL,
+                                   action          VARCHAR2(10)    NOT NULL,
+                                   old_balance     NUMBER(15,2),
+                                   new_balance     NUMBER(15,2),
+                                   changed_by      VARCHAR2(100)   DEFAULT USER NOT NULL,
+                                   changed_at      TIMESTAMP       DEFAULT SYSTIMESTAMP NOT NULL
+);
+
+CREATE OR REPLACE TRIGGER trg_accounts_audit
+AFTER INSERT OR UPDATE OR DELETE ON accounts
+    FOR EACH ROW
+BEGIN
+    IF INSERTING THEN
+        INSERT INTO transaction_audit (account_id, action, old_balance, new_balance)
+        VALUES (:NEW.account_id, 'INSERT', NULL, :NEW.balance);
+
+    ELSIF UPDATING THEN
+        INSERT INTO transaction_audit (account_id, action, old_balance, new_balance)
+        VALUES (:NEW.account_id, 'UPDATE', :OLD.balance, :NEW.balance);
+
+    ELSIF DELETING THEN
+        INSERT INTO transaction_audit (account_id, action, old_balance, new_balance)
+        VALUES (:OLD.account_id, 'DELETE', :OLD.balance, NULL);
+END IF;
+END trg_accounts_audit;
