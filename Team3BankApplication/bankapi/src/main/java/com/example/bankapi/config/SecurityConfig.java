@@ -17,7 +17,7 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter jwtAuthConverter) throws Exception {
 
         http
                 // TODO 2: Configure authorization rules using authorizeHttpRequests().
@@ -43,7 +43,7 @@ public class SecurityConfig {
         // and claims-to-authorities mapping. Spring Security calls the jwks-uri
         // configured in application.yml to fetch the verification keys.
 
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter)))
 
         // TODO 4: Configure session management to STATELESS.
         // Use: .sessionManagement(session -> session

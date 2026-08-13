@@ -22,7 +22,7 @@ public class AccountService {
     // @PreAuthorize that restricts this to tellers and auditors only.
     //          An account holder should NEVER be able to list every account in the bank.
     //          Hint: "hasRole('TELLER') or hasRole('AUDITOR')"
-    @PreAuthorize("hasRole('TELLER') or hasRole('AUDITOR')")
+  @PreAuthorize("hasRole('TELLER') or hasRole('AUDITOR')")
     public List<AccountsDto> findAll() {
         return accountRepository.findAll().stream()
                 .map(this::toDto)

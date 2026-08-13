@@ -2,6 +2,7 @@ package com.example.bankbff.controller;
 
 import com.example.bankbff.client.BankingApiClient;
 import com.example.bankbff.dto.AccountDto;
+import com.example.bankbff.dto.DepositRequestDto;
 import com.example.bankbff.dto.CashTransactionRequestDto;
 import com.example.bankbff.dto.TransferRequestDto;
 import com.example.bankbff.dto.TransferResponseDto;
@@ -14,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-
+import java.util.Map;
 /**
  * Account-proxy controller.
  *
@@ -50,5 +51,11 @@ public class AccountController {
     @PostMapping("/accounts/{accountId}/transactions")
     public TransferResponseDto cashTransaction(@PathVariable String accountId, @RequestBody CashTransactionRequestDto request) {
         return bankingApiClient.postCashTransaction(accountId, request);
+    }
+
+    @PostMapping("/accounts/{accountId}/deposits")
+    public Map<String, String> deposit(@PathVariable String accountId, @RequestBody DepositRequestDto request) {
+
+        return bankingApiClient.postDeposit(accountId, request);
     }
 }

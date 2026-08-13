@@ -10,6 +10,17 @@
 
 import type { Account, CashTransactionRequest, CashTransactionResponse, TransferRequest, TransferResponse, User } from './types';
 
+function normalizeAccount(a: unknown): Account {
+  const obj = a as Record<string, unknown>;
+  return {
+    id: (obj['accountid'] as string) ?? (obj['id'] as string) ?? '',
+    customerId: (obj['customerId'] as string) ?? (obj['customerID'] as string) ?? (obj['customerid'] as string) ?? '',
+    accountType: obj['accountType'] as Account['accountType'],
+    balance: obj['balance'] as number,
+    status: obj['status'] as Account['status'],
+  };
+}
+
 export async function getCurrentUser(): Promise<User | null> {
   const response = await fetch('/api/me', {
     headers: { Accept: 'application/json' },
@@ -30,21 +41,45 @@ export async function getAccounts(): Promise<Account[]> {
   if (!response.ok) {
     throw new Error(`Failed to load accounts: ${response.status}`);
   }
-  return response.json();
+  const data = await response.json();
+  if (Array.isArray(data)) {
+    return data.map(normalizeAccount);
+  }
+  return [normalizeAccount(data)];
 }
 
-export async function getAccountByCustomerNumber(customerNumber: string): Promise<Account[]> {
-  const response = await fetch(`/api/customers/${customerNumber}/accounts`, {
+export async function getAccountByCustomerNumber(_customerNumber: string): Promise<Account[]> {
+  // The BFF exposes /api/accounts and returns accounts filtered based on the caller's JWT.
+  // Ignore customerNumber here and call the BFF endpoint so the server enforces authorization.
+  const response = await fetch('/api/accounts', {
     headers: { Accept: 'application/json' },
   });
   if (!response.ok) {
     throw new Error(`Failed to load accounts: ${response.status}`);
   }
-  return response.json();
+  const data = await response.json();
+  if (Array.isArray(data)) {
+    return data.map(normalizeAccount);
+  }
+  return [normalizeAccount(data)];
 }
 
 export async function getAccountById(accountId: string): Promise<Account[]> {
   const response = await fetch(`/api/accounts/${accountId}`, {
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to load account: ${response.status}`);
+  }
+  const data = await response.json();
+  if (Array.isArray(data)) {
+    return data.map(normalizeAccount);
+  }
+  return [normalizeAccount(data)];
+}
+
+export async function getByCustomerNumber(customerNumber: string): Promise<Account[]> {
+  const response = await fetch(`/api/accounts/${customerNumber}`, {
     headers: { Accept: 'application/json' },
   });
   if (!response.ok) {
@@ -96,6 +131,25 @@ export async function postCashTransaction(
   if (!response.ok) {
     const message = await safeReadErrorMessage(response);
     throw new Error(message || `Cash transaction failed: ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function postDeposit(
+  accountId: string,
+  amount: number
+): Promise<{ txnId?: string; status?: string; message?: string }> {
+  const response = await fetch(`/api/accounts/${accountId}/deposits`, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ amount }),
+  });
+  if (!response.ok) {
+    const message = await safeReadErrorMessage(response);
+    throw new Error(message || `Deposit failed: ${response.status}`);
   }
   return response.json();
 }

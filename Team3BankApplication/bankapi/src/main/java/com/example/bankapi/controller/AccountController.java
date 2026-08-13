@@ -1,14 +1,26 @@
 package com.example.bankapi.controller;
 
 import com.example.bankapi.dto.AccountsDto;
+import com.example.bankapi.model.DepositRequest;
 import com.example.bankapi.model.Account;
 import com.example.bankapi.service.AccountService;
+import com.example.bankapi.model.CashTransactionRequest;
+import com.example.bankapi.model.CashTransactionResponse;
 import com.example.bankapi.service.AuditService;
 import com.example.bankapi.service.DownstreamAccountService;
 import com.example.bankapi.service.TransferService;
+import com.example.bankapi.entity.Accounts;
+import com.example.bankapi.entity.AccountStatus;
+import com.example.bankapi.entity.TxnStatus;
+import com.example.bankapi.entity.TxnType;
+import com.example.bankapi.repository.AccountRepository;
+import com.example.bankapi.repository.TransactionRepository;
+import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -28,12 +40,17 @@ public class AccountController {
     private final AuditService auditService;
     private final DownstreamAccountService downstreamAccountService;
     private final TransferService transferService;
+    private final AccountRepository accountRepository;
+    private final TransactionRepository transactionRepository;
 
-    public AccountController(AccountService accountService, AuditService auditService, DownstreamAccountService downstreamAccountService, TransferService transferService) {
+    public AccountController(AccountService accountService, AuditService auditService, DownstreamAccountService downstreamAccountService, TransferService transferService, AccountRepository accountRepository,
+            TransactionRepository transactionRepository) {
         this.accountService = accountService;
         this.auditService = auditService;
         this.downstreamAccountService = downstreamAccountService;
         this.transferService = transferService;
+         this.accountRepository = accountRepository;
+        this.transactionRepository = transactionRepository;
     }
 
     @GetMapping
@@ -130,5 +147,45 @@ public class AccountController {
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @PreAuthorize("hasAuthority('SCOPE_account.write') and hasRole('TELLER')")
+    @Transactional
+    @PostMapping("/{accountId}/deposits")
+    public ResponseEntity<Map<String, String>> deposit(
+            @PathVariable Long accountId,
+            @Valid @RequestBody DepositRequest request) {
+        var accountOpt = accountRepository.findById(accountId);
+        if (accountOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("status", "FAILED", "message", "Account not found"));
+        }
+
+        Accounts account = accountOpt.get();
+        if (account.getAccountStatus() != AccountStatus.ACTIVE) {
+            return ResponseEntity.status(422)
+                    .body(Map.of("status", "FAILED", "message", "Account is inactive"));
+        }
+
+        BigDecimal currentBalance = account.getBalance();
+        if (currentBalance == null) {
+            currentBalance = BigDecimal.ZERO;
+        }
+        account.setBalance(currentBalance.add(request.amount()));
+        Accounts saved = accountRepository.save(account);
+
+        com.example.bankapi.entity.Transaction transaction = new com.example.bankapi.entity.Transaction();
+        String txnId = "D-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase();
+        transaction.setId(txnId);
+        transaction.setAccount(saved);
+        transaction.setTxnType(TxnType.DEPOSIT);
+        transaction.setAmount(request.amount());
+        transaction.setStatus(TxnStatus.COMPLETED);
+        transaction.setTxnDate(java.time.LocalDateTime.now());
+        transaction.setDescription("Teller deposit");
+        transactionRepository.save(transaction);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(Map.of("txnId", transaction.getId(), "status", "COMPLETED"));
     }
 }

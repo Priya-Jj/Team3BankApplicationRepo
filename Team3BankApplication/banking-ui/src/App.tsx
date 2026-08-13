@@ -19,7 +19,7 @@ import { TellerScreen } from './components/TellerScreen';
 import { TransferForm } from './components/TransferForm';
 import { SignInScreen } from './components/SignInScreen';
 import { useAuth } from './auth/AuthContext';
-import { getAccounts } from './api/client';
+import { getByCustomerNumber, getAccounts } from './api/client';
 import type { Account } from './api/types';
 import './App.css';
 
@@ -31,17 +31,19 @@ export function App() {
   const [accountsError, setAccountsError] = useState<string | null>(null);
 
   const loadAccounts = useCallback(async () => {
+    if (!user) return;
     setAccountsLoading(true);
     setAccountsError(null);
     try {
-      const data = await getAccounts();
+      const data =  isTeller ? await getAccounts() : await getByCustomerNumber(user.subject);
       setAccounts(data);
     } catch (e) {
       setAccountsError(e instanceof Error ? e.message : 'Unknown error');
+      setAccounts([]);
     } finally {
       setAccountsLoading(false);
     }
-  }, []);
+  }, [user]);
 
   // Load accounts once a user becomes available (the auth gate).
   useEffect(() => {
