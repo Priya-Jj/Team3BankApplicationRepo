@@ -228,7 +228,7 @@ public class AccountController {
         transaction.setAccount(saved);
         transaction.setTxnType(TxnType.DEPOSIT);
         transaction.setAmount(request.amount());
-        transaction.setStatus(TxnStatus.COMPLETED);
+        transaction.setStatus(TransactionStatus.COMPLETED);
         transaction.setTxnDate(java.time.LocalDateTime.now());
         transaction.setDescription("Teller deposit");
         transactionRepository.save(transaction);
