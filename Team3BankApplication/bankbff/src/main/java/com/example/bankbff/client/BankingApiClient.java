@@ -7,7 +7,7 @@ import com.example.bankbff.dto.TransferResponseDto;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
-
+import com.example.bankbff.dto.DepositRequestDto;
 import java.util.List;
 
 /**
@@ -77,6 +77,15 @@ public class BankingApiClient {
                 .bodyValue(request)
                 .retrieve()
                 .bodyToMono(TransferResponseDto.class)
+                .block();
+    }
+
+     public java.util.Map<String, String> postDeposit(String accountId, DepositRequestDto request) {
+        return bankApiWebClient.post()
+                .uri("/api/v1/accounts/{id}/deposits", accountId)
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<java.util.Map<String, String>>() {})
                 .block();
     }
 }
