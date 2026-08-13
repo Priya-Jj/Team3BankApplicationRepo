@@ -1,0 +1,201 @@
+:root {
+  color-scheme: light;
+  --bg: #e9eff7;
+  --surface: #ffffff;
+  --surface-soft: #f7fbff;
+  --surface-muted: #f2f6fb;
+  --text: #16222b;
+  --muted: #556d82;
+  --primary: #1c3d6b;
+  --primary-soft: #d8e6f5;
+  --accent: #b68335;
+  --accent-soft: #f7ede0;
+  --border: #d8e2ea;
+  --shadow: 0 20px 60px rgba(15, 35, 60, 0.09);
+  --radius: 22px;
+}
+
+body {
+  background-color: var(--bg);
+}
+
+.header {
+  background: linear-gradient(135deg, #162d51 0%, #1f416a 100%) !important;
+  color: #f3f5f8 !important;
+  box-shadow: 0 8px 20px rgba(14, 34, 60, 0.16) !important;
+}
+
+.header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.header .tagline {
+  color: rgba(243, 245, 248, 0.85);
+}
+
+.account-list,
+.transfer-form,
+.teller-screen,
+.all-accounts,
+.sign-in-screen,
+.transaction-history,
+.teller-tabs {
+  background-color: var(--surface) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: var(--shadow) !important;
+  border: 1px solid var(--border) !important;
+}
+
+.account-list table,
+.all-accounts table {
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.account-list th,
+.account-list td,
+.all-accounts th,
+.all-accounts td {
+  padding: 1rem 1.2rem !important;
+}
+
+.account-list th,
+.all-accounts th {
+  background-color: #f5f9ff !important;
+  color: #5d7288 !important;
+}
+
+.account-list th:last-child,
+.account-list td:last-child,
+.all-accounts th:last-child,
+.all-accounts td:last-child {
+  text-align: right !important;
+}
+
+.account-list tr:hover td,
+.all-accounts tr:hover td {
+  background-color: #f8faff !important;
+}
+
+.transfer-form input,
+.transfer-form select,
+.create-account-form input,
+.create-account-form select,
+.form-group input,
+.form-group select,
+input,
+select {
+  border-radius: 14px !important;
+  background-color: #f7fbff !important;
+  border-color: var(--border) !important;
+}
+
+.transfer-form input:focus,
+.transfer-form select:focus,
+.create-account-form input:focus,
+.create-account-form select:focus,
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #4a74b8 !important;
+  box-shadow: 0 0 0 4px rgba(74, 116, 184, 0.14) !important;
+}
+
+button,
+.sign-in-button,
+.create-account-button,
+.submit-button {
+  background: linear-gradient(135deg, var(--primary), #0f2b51) !important;
+  color: white !important;
+  border-radius: 999px !important;
+  box-shadow: 0 12px 25px rgba(28, 61, 107, 0.18) !important;
+}
+
+button:disabled,
+.transfer-form button:disabled {
+  background-color: #9bb0c6 !important;
+}
+
+.teller-info {
+  background: linear-gradient(180deg, #f7faff 0%, #eef4fb 100%) !important;
+  border-left: 5px solid var(--primary) !important;
+}
+
+.status-message {
+  background-color: #f5f8fb !important;
+  border: 1px solid #d9e3ed !important;
+}
+
+.error-message {
+  background-color: #fde8ea !important;
+  border: 1px solid #f7c4c8 !important;
+}
+
+.sign-in-screen {
+  text-align: center;
+}
+
+.transaction-history li {
+  background-color: #f8fbff !important;
+  border: 1px solid #e6eef5 !important;
+}
+
+.transaction-history-type.deposit {
+  background-color: #e8f4e6 !important;
+  color: #1f5d2c !important;
+}
+
+.transaction-history-type.withdrawal {
+  background-color: #fde8eb !important;
+  color: #7b202b !important;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  padding-left: 1rem;
+  background-color: transparent !important;
+}
+
+.tabs button {
+  background: transparent !important;
+  color: var(--muted) !important;
+  padding: 0.6rem 1rem !important;
+  border-radius: 12px 12px 0 0 !important;
+  border: 1px solid transparent !important;
+  transition: all 0.18s ease !important;
+  font-weight: 600 !important;
+  margin-bottom: 0 !important;
+  box-shadow: none !important;
+}
+
+.tabs button:hover {
+  background-color: var(--surface-soft) !important;
+  color: var(--primary) !important;
+  transform: translateY(-2px) !important;
+}
+
+.tabs button:focus-visible {
+  outline: 3px solid rgba(74,116,184,0.16) !important;
+  outline-offset: 2px !important;
+}
+
+.tabs button.active {
+  background: linear-gradient(135deg, var(--primary), #0f2b51) !important;
+  color: white !important;
+  border: 1px solid rgba(15,35,60,0.08) !important;
+  box-shadow: 0 10px 30px rgba(15,35,60,0.15) !important;
+  position: relative !important;
+  z-index: 2 !important;
+  transform: translateY(-2px) !important;
+}
+
+@media (max-width: 820px) {
+  .header-content,
+  .user-info {
+    width: 100% !important;
+    text-align: left !important;
+  }
+}
