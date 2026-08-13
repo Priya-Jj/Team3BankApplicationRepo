@@ -153,9 +153,19 @@ public class AccountController {
     @Transactional
     @PostMapping("/{accountId}/deposits")
     public ResponseEntity<Map<String, String>> deposit(
-            @PathVariable Long accountId,
+            @PathVariable String accountId,
             @Valid @RequestBody DepositRequest request) {
-        var accountOpt = accountRepository.findById(accountId);
+        // Support both numeric DB id and accountNumber string
+        var accountOpt = java.util.Optional.<Accounts>empty();
+        try {
+            // try numeric id
+            Long id = Long.parseLong(accountId);
+            accountOpt = accountRepository.findById(id);
+        } catch (NumberFormatException ex) {
+            // not numeric, try account number
+            accountOpt = accountRepository.findByAccountNumber(accountId);
+        }
+
         if (accountOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("status", "FAILED", "message", "Account not found"));
