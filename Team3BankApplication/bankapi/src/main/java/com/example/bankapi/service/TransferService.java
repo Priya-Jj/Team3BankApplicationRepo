@@ -1,6 +1,7 @@
 package com.example.bankapi.service;
 
 import com.example.bankapi.entity.*;
+import com.example.bankapi.model.CashTransactionResponse;
 import com.example.bankapi.repository.AccountRepository;
 import com.example.bankapi.repository.TransferRepository;
 import org.springframework.stereotype.Service;
@@ -85,4 +86,45 @@ public class TransferService {
             lock.unlock();
         }
     }
+
+//    public CashTransactionResponse recordCashTransaction(String accountId, String transactionType, BigDecimal amount) {
+//        lock.lock();
+//        try {
+//            int accountIndex = indexOf(accountId);
+//            if (accountIndex == -1) {
+//                return new CashTransactionResponse(null, TransactionStatus.FAILED);
+//            }
+//
+//            Account account = accounts.get(accountIndex);
+//            if (!"ACTIVE".equalsIgnoreCase(account.status())) {
+//                return new CashTransactionResponse(null, TransactionStatus.FAILED);
+//            }
+//
+//            if ("WITHDRAWAL".equalsIgnoreCase(transactionType)) {
+//                if (amount.compareTo(account.balance()) > 0) {
+//                    return new CashTransactionResponse(null, TransactionStatus.FAILED);
+//                }
+//                accounts.set(accountIndex, new Account(
+//                        account.id(), account.customerId(), account.accountType(),
+//                        account.balance().subtract(amount), account.status()));
+//            } else if ("DEPOSIT".equalsIgnoreCase(transactionType)) {
+//                accounts.set(accountIndex, new Account(
+//                        account.id(), account.customerId(), account.accountType(),
+//                        account.balance().add(amount), account.status()));
+//            } else {
+//                return new CashTransactionResponse(null, TransactionStatus.FAILED);
+//            }
+//
+//            try {
+//                statsPublisher.publish(transactionType.toUpperCase(), amount);
+//            } catch (Exception ex) {
+//                System.err.println("Failed to publish cash transaction stats: " + ex.getMessage());
+//            }
+//
+//            String txnId = "CASH-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+//            return new CashTransactionResponse(txnId, TransactionStatus.COMPLETED);
+//        } finally {
+//            lock.unlock();
+//        }
+//    }
 }
