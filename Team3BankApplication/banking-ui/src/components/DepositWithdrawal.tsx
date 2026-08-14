@@ -10,7 +10,7 @@ type DepositWithdrawalProps = {
   onAddTransaction?: (record: CashTransactionRecord) => void;
 };
 
-export function DepositWithdrawal({ accounts, onRefreshAccounts }: DepositWithdrawalProps) {
+export function DepositWithdrawal({ accounts, onRefreshAccounts, onAddTransaction }: DepositWithdrawalProps) {
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [fromAccount, setFromAccount] = useState('');
   const [amount, setAmount] = useState('');
@@ -106,6 +106,7 @@ export function DepositWithdrawal({ accounts, onRefreshAccounts }: DepositWithdr
           timestamp: new Date().toLocaleString(),
         } as CashTransactionRecord;
         setTransactions((prev) => [newRecord, ...prev].slice(0, 8));
+        onAddTransaction?.(newRecord);
         await onRefreshAccounts?.();
       } else {
         const result = await postWithdrawls(fromAccount, amountNumber);
@@ -128,6 +129,7 @@ export function DepositWithdrawal({ accounts, onRefreshAccounts }: DepositWithdr
             timestamp: new Date().toLocaleString(),
           } as CashTransactionRecord;
           setTransactions((prev) => [newRecord, ...prev].slice(0, 8));
+          onAddTransaction?.(newRecord);
           await onRefreshAccounts?.();
         }
       }

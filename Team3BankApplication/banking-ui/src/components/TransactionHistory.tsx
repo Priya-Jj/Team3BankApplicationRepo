@@ -1,16 +1,28 @@
-import type { CashTransactionRecord } from '../api/types';
+import type { CashTransactionRecord, AuditRecord } from '../api/types';
 import { formatCurrency } from '../utils/format';
 
 type TransactionHistoryProps = {
-  transactions: CashTransactionRecord[];
+  transactions: (AuditRecord | CashTransactionRecord)[];
   emptyMessage?: string;
 };
 
-export function TransactionHistory({ transactions, emptyMessage = 'No recent deposits or withdrawals yet.' }: TransactionHistoryProps) {
+function formatDateIsoToMMDDYYYY(iso?: string) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(d.getUTCDate()).padStart(2, '0');
+  const yyyy = String(d.getUTCFullYear());
+  return `${mm}/${dd}/${yyyy}`;
+}
+
+export function TransactionHistory({
+  transactions,
+  emptyMessage = 'No recent deposits or withdrawals yet.',
+}: TransactionHistoryProps) {
   if (transactions.length === 0) {
     return (
       <section className="transaction-history">
-        <h3>Recent teller activity</h3>
         <p className="status-message">{emptyMessage}</p>
       </section>
     );
@@ -18,23 +30,40 @@ export function TransactionHistory({ transactions, emptyMessage = 'No recent dep
 
   return (
     <section className="transaction-history">
-      <h3>Recent teller activity</h3>
-      <ul>
-        {transactions.map((transaction) => (
-          <li key={transaction.id}>
-            <div className="transaction-history-main">
-              <span className={`transaction-history-type ${transaction.type.toLowerCase()}`}>
-                {transaction.type}
-              </span>
-              <strong>{transaction.accountId}</strong>
-            </div>
-            <div className="transaction-history-meta">
-              <span>{formatCurrency(transaction.amount)}</span>
-              <span>{transaction.timestamp}</span>
-            </div>
-          </li>
-        ))}
-      </ul>
+      <table className="audit-table">
+        <thead>
+          <tr>
+            <th>Account ID</th>
+            <th>Action</th>
+            <th>Old Balance</th>
+            <th>New Balance</th>
+            <th>Changed At</th>
+          </tr>
+        </thead>
+        <tbody>
+          {transactions.map((transaction) => {
+            const isAudit = (transaction as AuditRecord).changedAt !== undefined;
+            const accountId = transaction.accountId ?? '';
+            const action = isAudit
+              ? (transaction as AuditRecord).actionType
+              : ((transaction as CashTransactionRecord).type ?? '');
+            const oldBal = isAudit ? (transaction as AuditRecord).oldBalance : undefined;
+            const newBal = isAudit ? (transaction as AuditRecord).newBalance : undefined;
+            const changedAt = isAudit
+              ? (transaction as AuditRecord).changedAt
+              : (transaction as CashTransactionRecord).timestamp;
+            return (
+              <tr key={transaction.id}>
+                <td>{accountId}</td>
+                <td>{action}</td>
+                <td>{typeof oldBal === 'number' ? formatCurrency(oldBal) : '-'}</td>
+                <td>{typeof newBal === 'number' ? formatCurrency(newBal) : '-'}</td>
+                <td>{formatDateIsoToMMDDYYYY(changedAt)}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </section>
   );
 }

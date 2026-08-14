@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { postTransfer } from '../api/client';
-import type { Account, CashTransactionRecord } from '../api/types';
+import { postTransfer, getAudits } from '../api/client';
+import type { Account, CashTransactionRecord, AuditRecord } from '../api/types';
 import { formatCurrency } from '../utils/format';
 import { DepositWithdrawal } from './DepositWithdrawal';
 import { TransactionHistory } from './TransactionHistory';
@@ -24,7 +24,7 @@ export function TellerScreen({ accounts, loading, error, onRefreshAccounts }: Te
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [messageType, setMessageType] = useState<'success' | 'error' | null>(null);
-  const [transactions, setTransactions] = useState<CashTransactionRecord[]>([]);
+  const [transactions, setTransactions] = useState<(AuditRecord | CashTransactionRecord)[]>([]);
   const [activeTab, setActiveTab] = useState<'transfer' | 'cash' | 'history'>('transfer');
 
   const customerIds = useMemo(() => {
@@ -60,6 +60,23 @@ export function TellerScreen({ accounts, loading, error, onRefreshAccounts }: Te
       setSelectedCustomerId(customerIds[0] ?? '');
     }
   }, [accounts.length, customerIds, selectedCustomerId]);
+
+  // Load audits when Recent History tab is opened
+  useEffect(() => {
+    if (activeTab !== 'history') return;
+    let mounted = true;
+    (async () => {
+      try {
+        const audits = await getAudits();
+        if (!mounted) return;
+        setTransactions(audits);
+      } catch (e) {
+        // swallow errors; keep existing transactions if present
+        // console.error('Failed to load audits', e);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [activeTab]);
 
   async function handleTransferSubmit(e: FormEvent) {
     e.preventDefault();
