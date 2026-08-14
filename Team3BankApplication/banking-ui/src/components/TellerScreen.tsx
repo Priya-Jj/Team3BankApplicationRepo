@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { postTransfer, putAccountStatus } from '../api/client';
-import type { Account, CashTransactionRecord } from '../api/types';
+import { postTransfer, getAudits } from '../api/client';
+import type { Account, CashTransactionRecord, AuditRecord } from '../api/types';
 import { formatCurrency } from '../utils/format';
 import { DepositWithdrawal } from './DepositWithdrawal';
 import { TransactionHistory } from './TransactionHistory';
@@ -25,7 +25,9 @@ export function TellerScreen({ accounts, loading, error, onRefreshAccounts }: Te
   const [message, setMessage] = useState<string | null>(null);
   const [messageType, setMessageType] = useState<'success' | 'error' | null>(null);
   const [transactions, setTransactions] = useState<CashTransactionRecord[]>([]);
-  const [activeTab, setActiveTab] = useState<'transfer' | 'cash' | 'history' | 'status'>('transfer');
+  const [activeTab, setActiveTab] = useState<'transfer' | 'cash' | 'history' | 'status'>(
+    'transfer'
+  );
   const [statusSubmitting, setStatusSubmitting] = useState<string | null>(null);
 
   const customerIds = useMemo(() => {
@@ -62,6 +64,25 @@ export function TellerScreen({ accounts, loading, error, onRefreshAccounts }: Te
     }
   }, [accounts.length, customerIds, selectedCustomerId]);
 
+  // Load audits when Recent History tab is opened
+  useEffect(() => {
+    if (activeTab !== 'history') return;
+    let mounted = true;
+    (async () => {
+      try {
+        const audits = await getAudits();
+        if (!mounted) return;
+        setTransactions(audits);
+      } catch (e) {
+        // swallow errors; keep existing transactions if present
+        // console.error('Failed to load audits', e);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [activeTab]);
+
   async function handleTransferSubmit(e: FormEvent) {
     e.preventDefault();
     setMessage(null);
@@ -86,7 +107,9 @@ export function TellerScreen({ accounts, loading, error, onRefreshAccounts }: Te
       return;
     }
 
-    const fromAccountDetails = selectedCustomerAccounts.find((account) => account.id === fromAccount);
+    const fromAccountDetails = selectedCustomerAccounts.find(
+      (account) => account.id === fromAccount
+    );
     const toAccountDetails = selectedCustomerAccounts.find((account) => account.id === toAccount);
 
     if (!fromAccountDetails || !toAccountDetails) {
@@ -176,7 +199,9 @@ export function TellerScreen({ accounts, loading, error, onRefreshAccounts }: Te
                     <td>{account.customerId}</td>
                     <td>{account.accountType}</td>
                     <td>
-                      <span className={`account-status ${statusValue === 'ACTIVE' ? 'account-status-active' : 'account-status-inactive'}`}>
+                      <span
+                        className={`account-status ${statusValue === 'ACTIVE' ? 'account-status-active' : 'account-status-inactive'}`}
+                      >
                         {statusValue}
                       </span>
                     </td>
@@ -191,10 +216,34 @@ export function TellerScreen({ accounts, loading, error, onRefreshAccounts }: Te
 
       <section className="teller-tabs">
         <div className="tabs">
-          <button type="button" className={activeTab === 'transfer' ? 'active' : ''} onClick={() => setActiveTab('transfer')}>Transfer</button>
-          <button type="button" className={activeTab === 'cash' ? 'active' : ''} onClick={() => setActiveTab('cash')}>Deposit / Withdrawal</button>
-          <button type="button" className={activeTab === 'status' ? 'active' : ''} onClick={() => setActiveTab('status')}>Account Status</button>
-          <button type="button" className={activeTab === 'history' ? 'active' : ''} onClick={() => setActiveTab('history')}>Recent History</button>
+          <button
+            type="button"
+            className={activeTab === 'transfer' ? 'active' : ''}
+            onClick={() => setActiveTab('transfer')}
+          >
+            Transfer
+          </button>
+          <button
+            type="button"
+            className={activeTab === 'cash' ? 'active' : ''}
+            onClick={() => setActiveTab('cash')}
+          >
+            Deposit / Withdrawal
+          </button>
+          <button
+            type="button"
+            className={activeTab === 'status' ? 'active' : ''}
+            onClick={() => setActiveTab('status')}
+          >
+            Account Status
+          </button>
+          <button
+            type="button"
+            className={activeTab === 'history' ? 'active' : ''}
+            onClick={() => setActiveTab('history')}
+          >
+            Recent History
+          </button>
         </div>
 
         <div className="tab-content">
@@ -231,7 +280,9 @@ export function TellerScreen({ accounts, loading, error, onRefreshAccounts }: Te
               {!selectedCustomerId ? (
                 <p className="status-message">Choose a customer to begin.</p>
               ) : transferableAccounts.length < 2 ? (
-                <p className="status-message">This customer does not have enough active accounts to make a transfer.</p>
+                <p className="status-message">
+                  This customer does not have enough active accounts to make a transfer.
+                </p>
               ) : (
                 <form onSubmit={handleTransferSubmit}>
                   <div className="form-row">
@@ -293,7 +344,11 @@ export function TellerScreen({ accounts, loading, error, onRefreshAccounts }: Te
           )}
 
           {activeTab === 'cash' && (
-            <DepositWithdrawal accounts={accounts} onRefreshAccounts={onRefreshAccounts} onAddTransaction={(r) => setTransactions((prev) => [r, ...prev].slice(0, 50))} />
+            <DepositWithdrawal
+              accounts={accounts}
+              onRefreshAccounts={onRefreshAccounts}
+              onAddTransaction={(r) => setTransactions((prev) => [r, ...prev].slice(0, 50))}
+            />
           )}
 
           {activeTab === 'history' && (
@@ -301,7 +356,10 @@ export function TellerScreen({ accounts, loading, error, onRefreshAccounts }: Te
               <div className="section-header">
                 <h2>Recent Transactions</h2>
               </div>
-              <TransactionHistory transactions={transactions} emptyMessage="No recent transactions" />
+              <TransactionHistory
+                transactions={transactions}
+                emptyMessage="No recent transactions"
+              />
             </section>
           )}
 
@@ -314,7 +372,9 @@ export function TellerScreen({ accounts, loading, error, onRefreshAccounts }: Te
                 <p className="status-message">No accounts found.</p>
               ) : (
                 (() => {
-                  const inactiveAccounts = accounts.filter((account) => ((account.status ?? 'ACTIVE').toUpperCase() !== 'ACTIVE'));
+                  const inactiveAccounts = accounts.filter(
+                    (account) => (account.status ?? 'ACTIVE').toUpperCase() !== 'ACTIVE'
+                  );
                   if (inactiveAccounts.length === 0) {
                     return <p className="status-message">No inactive accounts.</p>;
                   }
@@ -355,7 +415,11 @@ export function TellerScreen({ accounts, loading, error, onRefreshAccounts }: Te
                                       setMessageType('success');
                                       await onRefreshAccounts?.();
                                     } catch (e) {
-                                      setMessage(e instanceof Error ? e.message : 'Failed to activate account');
+                                      setMessage(
+                                        e instanceof Error
+                                          ? e.message
+                                          : 'Failed to activate account'
+                                      );
                                       setMessageType('error');
                                     } finally {
                                       setStatusSubmitting(null);

@@ -74,3 +74,14 @@ export type CashTransactionRecord = {
   amount: number;
   timestamp: string;
 };
+
+// Audit records returned by /api/audits — similar but not identical to CashTransactionRecord.
+export type AuditRecord = {
+  id: string;
+  accountId: string;
+  actionType: string; // e.g. 'Update', 'Deposit', 'Withdrawal'
+  oldBalance?: number;
+  newBalance?: number;
+  changedAt: string; // ISO timestamp
+  customerId?: string;
+};

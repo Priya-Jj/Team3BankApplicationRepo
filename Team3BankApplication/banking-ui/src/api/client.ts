@@ -8,7 +8,7 @@
  * shapes match the types in types.ts directly, so there is no translation layer.
  */
 
-import type { Account, CashTransactionRequest, CashTransactionResponse, TransferRequest, TransferResponse, User } from './types';
+import type { Account, CashTransactionRequest, CashTransactionResponse, TransferRequest, TransferResponse, User, CashTransactionRecord, CashTransactionType, AuditRecord } from './types';
 
 function normalizeAccount(a: unknown): Account {
   const obj = a as Record<string, unknown>;
@@ -18,6 +18,26 @@ function normalizeAccount(a: unknown): Account {
     accountType: obj['accountType'] as Account['accountType'],
     balance: obj['balance'] as number,
     status: obj['status'] as Account['status'],
+  };
+}
+
+function normalizeAudit(a: unknown): AuditRecord {
+  const obj = a as Record<string, any>;
+  const id = (obj['id'] ?? obj['txnId'] ?? obj['transactionId'] ?? obj['auditId'] ?? '') as string;
+  const accountId = (obj['accountId'] ?? obj['accountid'] ?? obj['account_id'] ?? obj['account'] ?? '') as string;
+  const customerId = (obj['customerId'] ?? obj['customerID'] ?? obj['customerid'] ?? obj['customer'] ?? '') as string;
+  const actionType = (obj['actionType'] ?? obj['action'] ?? obj['type'] ?? obj['transactionType'] ?? '') as string;
+  const oldBalance = typeof obj['oldBalance'] === 'number' ? obj['oldBalance'] : (obj['old_balance'] ? Number(obj['old_balance']) : undefined);
+  const newBalance = typeof obj['newBalance'] === 'number' ? obj['newBalance'] : (obj['new_balance'] ? Number(obj['new_balance']) : undefined);
+  const changedAt = (obj['changedAt'] ?? obj['changed_at'] ?? obj['changedAt'] ?? obj['createdAt'] ?? obj['date'] ?? new Date().toISOString()) as string;
+  return {
+    id: id ?? '',
+    accountId: accountId ?? '',
+    customerId: customerId ?? undefined,
+    actionType: actionType ?? '',
+    oldBalance,
+    newBalance,
+    changedAt,
   };
 }
 
@@ -89,7 +109,7 @@ export async function getByCustomerNumber(customerNumber: string): Promise<Accou
 }
 
 export async function getTransactionById(accountId: string): Promise<Account[]> {
-  const response = await fetch(`/api/accounts/${accountId}/transactions`, {
+  const response = await fetch(`/api/audits`, {
     headers: { Accept: 'application/json' },
   });
   if (!response.ok) {
@@ -171,6 +191,20 @@ export async function postWithdrawls(
     throw new Error(message || `Withdraw failed: ${response.status}`);
   }
   return response.json();
+}
+
+export async function getAudits(): Promise<AuditRecord[]> {
+  const response = await fetch(`/api/audits`, {
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to load audits: ${response.status}`);
+  }
+  const data = await response.json();
+  if (Array.isArray(data)) {
+    return data.map(normalizeAudit);
+  }
+  return [normalizeAudit(data)];
 }
 
 async function safeReadErrorMessage(response: Response): Promise<string | null> {
