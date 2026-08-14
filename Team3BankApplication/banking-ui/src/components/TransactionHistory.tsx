@@ -28,6 +28,16 @@ export function TransactionHistory({
     );
   }
 
+  const sortedTransactions = [...transactions].sort((a, b) => {
+    const dateA = new Date(
+      (a as AuditRecord).changedAt ?? (a as CashTransactionRecord).timestamp ?? 0
+    ).getTime();
+    const dateB = new Date(
+      (b as AuditRecord).changedAt ?? (b as CashTransactionRecord).timestamp ?? 0
+    ).getTime();
+    return dateB - dateA;
+  });
+
   return (
     <section className="transaction-history">
       <table className="audit-table">
@@ -41,7 +51,7 @@ export function TransactionHistory({
           </tr>
         </thead>
         <tbody>
-          {transactions.map((transaction) => {
+          {sortedTransactions.map((transaction) => {
             const isAudit = (transaction as AuditRecord).changedAt !== undefined;
             const accountId = transaction.accountId ?? '';
             const action = isAudit
