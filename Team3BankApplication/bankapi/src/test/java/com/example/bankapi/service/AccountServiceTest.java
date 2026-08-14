@@ -6,6 +6,7 @@ import com.example.bankapi.entity.AccountType;
 import com.example.bankapi.entity.Accounts;
 import com.example.bankapi.entity.Customer;
 import com.example.bankapi.repository.AccountRepository;
+import com.example.bankapi.repository.TransactionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,11 +36,17 @@ class AccountServiceTest {
     @Mock
     private AccountRepository accountRepository;
 
+    @Mock
+    private TransactionRepository transactionRepository;
+
+    @Mock
+    private TransactionStatsPublisher transactionStatsPublisher;
+
     private AccountService accountService;
 
     @BeforeEach
     void setUp() {
-        accountService = new AccountService(accountRepository);
+        accountService = new AccountService(accountRepository, transactionRepository, transactionStatsPublisher);
     }
 
     private Customer newCustomer(Long id, String customerNumber) {
