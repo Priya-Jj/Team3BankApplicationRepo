@@ -24,8 +24,11 @@ export function TellerScreen({ accounts, loading, error, onRefreshAccounts }: Te
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [messageType, setMessageType] = useState<'success' | 'error' | null>(null);
-  const [transactions, setTransactions] = useState<(AuditRecord | CashTransactionRecord)[]>([]);
-  const [activeTab, setActiveTab] = useState<'transfer' | 'cash' | 'history'>('transfer');
+  const [transactions, setTransactions] = useState<CashTransactionRecord[]>([]);
+  const [activeTab, setActiveTab] = useState<'transfer' | 'cash' | 'history' | 'status'>(
+    'transfer'
+  );
+  const [statusSubmitting, setStatusSubmitting] = useState<string | null>(null);
 
   const customerIds = useMemo(() => {
     return Array.from(new Set(accounts.map((account) => account.customerId))).sort();
@@ -75,7 +78,9 @@ export function TellerScreen({ accounts, loading, error, onRefreshAccounts }: Te
         // console.error('Failed to load audits', e);
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [activeTab]);
 
   async function handleTransferSubmit(e: FormEvent) {
@@ -102,7 +107,9 @@ export function TellerScreen({ accounts, loading, error, onRefreshAccounts }: Te
       return;
     }
 
-    const fromAccountDetails = selectedCustomerAccounts.find((account) => account.id === fromAccount);
+    const fromAccountDetails = selectedCustomerAccounts.find(
+      (account) => account.id === fromAccount
+    );
     const toAccountDetails = selectedCustomerAccounts.find((account) => account.id === toAccount);
 
     if (!fromAccountDetails || !toAccountDetails) {
@@ -192,7 +199,9 @@ export function TellerScreen({ accounts, loading, error, onRefreshAccounts }: Te
                     <td>{account.customerId}</td>
                     <td>{account.accountType}</td>
                     <td>
-                      <span className={`account-status ${statusValue === 'ACTIVE' ? 'account-status-active' : 'account-status-inactive'}`}>
+                      <span
+                        className={`account-status ${statusValue === 'ACTIVE' ? 'account-status-active' : 'account-status-inactive'}`}
+                      >
                         {statusValue}
                       </span>
                     </td>
@@ -207,9 +216,34 @@ export function TellerScreen({ accounts, loading, error, onRefreshAccounts }: Te
 
       <section className="teller-tabs">
         <div className="tabs">
-          <button type="button" className={activeTab === 'transfer' ? 'active' : ''} onClick={() => setActiveTab('transfer')}>Transfer</button>
-          <button type="button" className={activeTab === 'cash' ? 'active' : ''} onClick={() => setActiveTab('cash')}>Deposit / Withdrawal</button>
-          <button type="button" className={activeTab === 'history' ? 'active' : ''} onClick={() => setActiveTab('history')}>Recent History</button>
+          <button
+            type="button"
+            className={activeTab === 'transfer' ? 'active' : ''}
+            onClick={() => setActiveTab('transfer')}
+          >
+            Transfer
+          </button>
+          <button
+            type="button"
+            className={activeTab === 'cash' ? 'active' : ''}
+            onClick={() => setActiveTab('cash')}
+          >
+            Deposit / Withdrawal
+          </button>
+          <button
+            type="button"
+            className={activeTab === 'status' ? 'active' : ''}
+            onClick={() => setActiveTab('status')}
+          >
+            Account Status
+          </button>
+          <button
+            type="button"
+            className={activeTab === 'history' ? 'active' : ''}
+            onClick={() => setActiveTab('history')}
+          >
+            Recent History
+          </button>
         </div>
 
         <div className="tab-content">
@@ -246,7 +280,9 @@ export function TellerScreen({ accounts, loading, error, onRefreshAccounts }: Te
               {!selectedCustomerId ? (
                 <p className="status-message">Choose a customer to begin.</p>
               ) : transferableAccounts.length < 2 ? (
-                <p className="status-message">This customer does not have enough active accounts to make a transfer.</p>
+                <p className="status-message">
+                  This customer does not have enough active accounts to make a transfer.
+                </p>
               ) : (
                 <form onSubmit={handleTransferSubmit}>
                   <div className="form-row">
@@ -308,7 +344,11 @@ export function TellerScreen({ accounts, loading, error, onRefreshAccounts }: Te
           )}
 
           {activeTab === 'cash' && (
-            <DepositWithdrawal accounts={accounts} onRefreshAccounts={onRefreshAccounts} onAddTransaction={(r) => setTransactions((prev) => [r, ...prev].slice(0, 50))} />
+            <DepositWithdrawal
+              accounts={accounts}
+              onRefreshAccounts={onRefreshAccounts}
+              onAddTransaction={(r) => setTransactions((prev) => [r, ...prev].slice(0, 50))}
+            />
           )}
 
           {activeTab === 'history' && (
@@ -316,7 +356,87 @@ export function TellerScreen({ accounts, loading, error, onRefreshAccounts }: Te
               <div className="section-header">
                 <h2>Recent Transactions</h2>
               </div>
-              <TransactionHistory transactions={transactions} emptyMessage="No recent transactions" />
+              <TransactionHistory
+                transactions={transactions}
+                emptyMessage="No recent transactions"
+              />
+            </section>
+          )}
+
+          {activeTab === 'status' && (
+            <section className="account-status-tab">
+              <div className="section-header">
+                <h2>Account Status Management</h2>
+              </div>
+              {accounts.length === 0 ? (
+                <p className="status-message">No accounts found.</p>
+              ) : (
+                (() => {
+                  const inactiveAccounts = accounts.filter(
+                    (account) => (account.status ?? 'ACTIVE').toUpperCase() !== 'ACTIVE'
+                  );
+                  if (inactiveAccounts.length === 0) {
+                    return <p className="status-message">No inactive accounts.</p>;
+                  }
+                  return (
+                    <table className="status-table">
+                      <thead>
+                        <tr>
+                          <th>Account</th>
+                          <th>Customer</th>
+                          <th>Type</th>
+                          <th>Status</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {inactiveAccounts.map((account) => {
+                          const statusValue = (account.status ?? 'INACTIVE').toUpperCase();
+                          return (
+                            <tr key={account.id}>
+                              <td>{account.id}</td>
+                              <td>{account.customerId}</td>
+                              <td>{account.accountType}</td>
+                              <td>
+                                <span className={`account-status account-status-inactive`}>
+                                  {statusValue}
+                                </span>
+                              </td>
+                              <td>
+                                <button
+                                  type="button"
+                                  className="activate-button"
+                                  disabled={statusSubmitting !== null}
+                                  onClick={async () => {
+                                    try {
+                                      setStatusSubmitting(account.id);
+                                      await putAccountStatus(String(account.id), 'ACTIVE');
+                                      setMessage(`Account ${account.id} activated`);
+                                      setMessageType('success');
+                                      await onRefreshAccounts?.();
+                                    } catch (e) {
+                                      setMessage(
+                                        e instanceof Error
+                                          ? e.message
+                                          : 'Failed to activate account'
+                                      );
+                                      setMessageType('error');
+                                    } finally {
+                                      setStatusSubmitting(null);
+                                    }
+                                  }}
+                                >
+                                  Activate
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  );
+                })()
+              )}
             </section>
           )}
         </div>

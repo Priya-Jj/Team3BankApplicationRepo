@@ -71,20 +71,24 @@ CREATE TABLE transaction_audit (
                                    changed_at      TIMESTAMP       DEFAULT SYSTIMESTAMP NOT NULL
 );
 
+ALTER TABLE account_audit
+    ADD action_type VARCHAR2(10) NOT NULL;
+
 CREATE OR REPLACE TRIGGER trg_accounts_audit
-AFTER INSERT OR UPDATE OR DELETE ON accounts
+    AFTER INSERT OR UPDATE OR DELETE ON accounts
     FOR EACH ROW
 BEGIN
     IF INSERTING THEN
-        INSERT INTO transaction_audit (account_id, action, old_balance, new_balance)
-        VALUES (:NEW.account_id, 'INSERT', NULL, :NEW.balance);
+        INSERT INTO account_audit (account_id, ACTION_TYPE, old_balance, new_balance, CHANGED_AT)
+        VALUES (:NEW.account_id, 'DEPOSIT', NULL, :NEW.balance, SYSTIMESTAMP);
 
     ELSIF UPDATING THEN
-        INSERT INTO transaction_audit (account_id, action, old_balance, new_balance)
-        VALUES (:NEW.account_id, 'UPDATE', :OLD.balance, :NEW.balance);
+        INSERT INTO account_audit (account_id, ACTION_TYPE, old_balance, new_balance, CHANGED_AT)
+        VALUES (:NEW.account_id, 'UPDATE', :OLD.balance, :NEW.balance, SYSTIMESTAMP);
 
     ELSIF DELETING THEN
-        INSERT INTO transaction_audit (account_id, action, old_balance, new_balance)
-        VALUES (:OLD.account_id, 'DELETE', :OLD.balance, NULL);
-END IF;
+        INSERT INTO ACCOUNT_AUDIT (account_id, ACTION_TYPE, old_balance, new_balance, CHANGED_AT)
+        VALUES (:OLD.account_id, 'WITHDRAWAL', :OLD.balance, NULL, SYSTIMESTAMP);
+    END IF;
 END trg_accounts_audit;
+

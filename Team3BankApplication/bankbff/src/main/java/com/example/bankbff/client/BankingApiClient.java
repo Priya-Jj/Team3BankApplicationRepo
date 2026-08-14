@@ -106,4 +106,13 @@ public class BankingApiClient {
                 .bodyToMono(new ParameterizedTypeReference<java.util.Map<String, String>>() {})
                 .block();
     }
+
+    public AccountDto putAccountStatus(String accountId, StatusUpdateRequestDto request) {
+        return bankApiWebClient.put()
+                .uri("/api/v1/accounts/{id}/status", accountId)
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(AccountDto.class)
+                .block();
+    }
 }

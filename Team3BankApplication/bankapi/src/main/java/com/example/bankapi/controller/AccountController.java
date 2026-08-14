@@ -214,6 +214,34 @@ public class AccountController {
 
     @PreAuthorize("hasAuthority('SCOPE_account.write') and hasRole('TELLER')")
     @Transactional
+    @PutMapping("/{accountId}/status")
+    public ResponseEntity<?> updateAccountStatus(
+            @PathVariable Long accountId,
+            @RequestBody StatusUpdateRequest request) {
+        var accountOpt = accountRepository.findById(accountId);
+        if (accountOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("status", "FAILED", "message", "Account not found"));
+        }
+
+        Accounts account = accountOpt.get();
+        String statusStr = request.status();
+        if (statusStr == null) {
+            return ResponseEntity.badRequest().body(Map.of("status", "FAILED", "message", "Missing status"));
+        }
+        try {
+            AccountStatus newStatus = AccountStatus.valueOf(statusStr.toUpperCase());
+            account.setAccountStatus(newStatus);
+            Accounts saved = accountRepository.save(account);
+            // return updated DTO
+            return ResponseEntity.ok(accountService.findById(saved.getId()));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(Map.of("status", "FAILED", "message", "Invalid status value"));
+        }
+    }
+
+    @PreAuthorize("hasAuthority('SCOPE_account.write') and hasRole('TELLER')")
+    @Transactional
     @PostMapping("/{accountId}/withdrawals")
     public ResponseEntity<Map<String, String>> withdraw(
             @PathVariable Long accountId,
